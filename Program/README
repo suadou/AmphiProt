@@ -1,0 +1,66 @@
+==========================================
+FOURIER-POWER-SPECTRUM-OF-HYDROPHOBICITIES
+==========================================
+
+PURPOSE:
+
+This is a graphical python program to obtain the Fourier power spectrum of
+hydrophibicities from an amino acid sequence.
+
+It was developed by Sergio Suarez-Dou from University of Oviedo, Spain. 
+
+REQUIREMENTS:
+
+Python 3.6 or later. To get python check this web site: https://www.python.org/
+
+Package dependencies: PyQT5, numpy, matplotlib and biopython. 
+
+The files in the folder "tables" contains files of the hydrophobicity scales
+obtained by differents authors (Eisenberg, Kyte-Doolittle, Chothia, Janin,
+Tanford, von Heijne-Blomberg, Wimley and Wolfenden).
+
+These tables can be modified and other added, but this would require modifying
+the script.
+
+INSTALLATION:
+
+To install the package, from the folder containing this package, type on the
+command line:
+
+	python -m pip install -r REQUIREMENTS.txt
+or
+	python3 -m pip install -r REQUIREMENTS.txt
+
+The pip package is required for first-time installation
+(see https://pip.pypa.io/en/stable/)
+
+RUNNING THE SCRIPT:
+
+Type on the command line:
+
+	python Application-[linux or IOs or Windows].py
+Or
+	python3 Application-[linux or IOs or Windows].py
+
+On unix systems, you also may give execution privileges to Application.py,
+en just type
+
+        Application.py
+
+USAGE RECOMMENDATIONS:
+
+We recommend to apply this method to a sequence from 200 to 500 amino acid.
+Longer sequences lead to lower definition and less sensibility.
+
+The default window size is 25 amino acid, and we recommend it to be between
+15 and 25 amino acid.
+
+The hydrophobicity plot uses a sliding window of 15 amino acid, widely
+extended in many publications. This value can be changed in the script file.
+
+TESTING FILES:
+
+The accompanying amino acid sequence files in FASTA format allow to reproduce
+the illustrations provided on the paper, and can be used for testing purposes.
+
+
