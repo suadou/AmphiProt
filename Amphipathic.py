@@ -2,6 +2,15 @@ from numpy import convolve, fft, mean, matrix, square
 from matplotlib import pyplot, transforms
 
 
+def read_table(table_name):
+    table = {}
+    fd = open("/.../tables/{table_name}", 'r')
+    for line in fd:
+        line = line.strip()
+        (key, val) = line.split(" ")
+        table[key] = val
+    return table
+
 def fourier(sequence, table, id_user, id_output):
     hydro = [table[aa] for aa in list(sequence)]
     window = 25
