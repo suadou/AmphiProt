@@ -2,7 +2,7 @@ from numpy import convolve, fft, mean, matrix, square
 from matplotlib import pyplot, transforms
 
 
-def fourier(sequence, table):
+def fourier(sequence, table, id_user, id_output):
     hydro = [table[aa] for aa in list(sequence)]
     window = 25
     km = [1/25] * 25
