@@ -32,7 +32,7 @@ class RegistrationForm(FlaskForm):
                                                                              max=80)])
 
 
-class User(UserMixin, db.Model): #quizas hace falta unique id pa esto, tengo duda
+class User(UserMixin, db.Model):  # quizas hace falta unique id pa esto, tengo duda
     __tablename__ = 'User'
     username = db.Column(db.String(25), primary_key=True, unique=True)
     password = db.Column(db.String(80))
