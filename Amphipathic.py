@@ -46,5 +46,4 @@ def fourier(sequence, table, id_user, id_output):
     pyplot.plot(convolve(hydro, km, 'same'), 'r', transform=rot + base)
     pyplot.grid(color='b', linestyle='-', linewidth=0.75)
     pyplot.ylim([1, len(I)])
-    pyplot.xlabel("Hydrophobicity")
     pyplot.savefig("Algo/{id_user}/{id_output}_hydroplot.png")
