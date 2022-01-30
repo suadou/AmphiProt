@@ -1,0 +1,56 @@
+@charset "UTF-8";
+/*!
+* Start Bootstrap - SB Admin v7.0.4 (https://startbootstrap.com/template/sb-admin)
+* Copyright 2013-2021 Start Bootstrap
+* Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin/blob/master/LICENSE)
+*/
+/*!
+ * Bootstrap v5.1.3 (https://getbootstrap.com/)
+ * Copyright 2011-2021 The Bootstrap Authors
+ * Copyright 2011-2021 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ */
+ /*Section added by us*/
+ 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+body {
+  background-color: #cfffdb;
+  padding-top: 100px;
+  margin-left: 360px;
+  margin-right: 360px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+form.form-signin{
+  text-align: center;
+  color: #004d13;
+  margin-left: 360px;
+  margin-right: 360px;
+
+}
+
+form.form{
+  color: #004d13;
+}
+
+h2.form-signin-heading{
+  text-align: center;
+  margin-left: -33.33%;
+  margin-right: -33.33%;
+  margin-bottom: 50px;
+  font-weight: 800;  
+  color: #004d13;  
+
+}
+
+.btn-primary {
+    color: #e8e8e8;
+    background-color: #00a329;
+    border-color: #cfffdb; /*set the color you want here*/
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+    color: white;
+    background-color: #00bd2f;
+    border-color: #cfffdb; /*set the color you want here*/
+}
