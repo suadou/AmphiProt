@@ -99,15 +99,12 @@ class Table(db.Model):
 
 @app.route('/')
 def index():
-
     form = Index_post_form()
     return render_template('index.html', form=form)
 
 
 @app.route('/', methods=['GET', 'POST'])
-def index_post(name=False):
-    if name is False:
-        name = str(random.randint(1e9, 1e10))
+def index_post():
     form = Index_post_form()
     PDB_id = form.PDB_id.data
     UniProt_id = form.UniProt_id.data
@@ -116,8 +113,11 @@ def index_post(name=False):
     BLAST = form.BLAST.data
     isoelectric = form.isoelectric.data
     if form.validate_on_submit():
-        return name
-    return render_template('index.html', form=form, name=name)
+        if current_user.is_anonymous:
+            name = str(random.randint(1e9, 1e10))
+        else:
+            name = current_user.username
+    return render_template('index.html', form=form)
 
 
 @app.route('/loging', methods=['GET', 'POST'])
@@ -149,8 +149,7 @@ def register():
 @app.route('/workspace')
 @login_required
 def workspace():
-    return current_user.username
-    return render_template('workspace.html', name=current_user.username)
+    return render_template('workspace.html')
 
 
 @app.route('/logout')
