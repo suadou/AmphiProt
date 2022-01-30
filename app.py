@@ -6,11 +6,15 @@ from wtforms.validators import InputRequired, Length
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+import os
 
+
+file_path = os.path.abspath(os.getcwd())+"/database.db"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'lalala'  # Falta
+# Falta
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+file_path
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -52,10 +56,10 @@ class Analysis(db.Model):
     Blastp = db.Column(db.Boolean)
     Date = db.Column(db.DateTime)
     Error = db.Column(db.String(80))
-    user_id = db.Column(db.String(25), db.ForeignKey("User.username"))
-    table_id = db.Column(db.Integer, db.ForeignKey("Table.id"))
-    user = db.relationship("User", foreign_keys=[user_id])
-    table = db.relationship("Table", foreign_keys=[table_id])
+    #user_id = db.Column(db.String(25), db.ForeignKey("User.username"))
+    #table_id = db.Column(db.Integer, db.ForeignKey("Table.id"))
+    #user = db.relationship("User", foreign_keys=[user_id])
+    #table = db.relationship("Table", foreign_keys=[table_id])
 
 
 class Files(db.Model):
@@ -64,10 +68,10 @@ class Files(db.Model):
     impout = db.Column(db.Boolean)
     path = db.Column(db.String(80))
     queryid = db.Column(db.Integer)
-    user_id = db.Column(db.String(25), db.ForeignKey("User.username"))
-    analysis_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
-    user = db.relationship("User", foreign_keys=[user_id])
-    analysis = db.relationship("Table", foreign_keys=[analysis_id])
+    #user_id = db.Column(db.String(25), db.ForeignKey("User.username"))
+    #analysis_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
+    #user = db.relationship("User", foreign_keys=[user_id])
+    #analysis = db.relationship("Table", foreign_keys=[analysis_id])
 
 
 class Table(db.Model):
@@ -88,8 +92,9 @@ def loging():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if check_password_hash(user.password, form.password.data):
-                #login_user(user, remember=True) esto es lo del dashboard, pruebalo si quieres el remember quizas hay que quitarlo
-                return redirect(url_for('workspace'))
+                #login_user(user, remember=True)
+                #return redirect(url_for('workspace'))
+                return '<h1>Works okey</h1>'
             return '<h1>Invalid username or password</h1>'
     return render_template('loging.html', form=form)
 
