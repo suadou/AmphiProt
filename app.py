@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField
@@ -128,8 +128,10 @@ def loging():
         if user:
             if check_password_hash(user.password, form.password.data):
                 login_user(user, remember=False)
+                flash("Logged in as " + user.username, "info")
                 return redirect(url_for('workspace'))
-            return '<h1>Invalid username or password</h1>'
+            flash("Invalid username or password", "error")
+            return redirect(url_for('loging'))
     return render_template('loging.html', form=form)
 
 
@@ -142,7 +144,8 @@ def register():
                         password=hashed)
         db.session.add(new_user)
         db.session.commit()
-        return '<h1>Works yey</h1>'
+        flash("You have successfully registered!", "info")
+        return redirect(url_for('index'))
     return render_template('register.html', form=form)
 
 
