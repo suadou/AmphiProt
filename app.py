@@ -5,13 +5,14 @@ from wtforms import StringField, PasswordField, TextAreaField, SelectField, File
 from wtforms.validators import InputRequired, Length, Regexp
 from wtforms.widgets import TextArea, ListWidget
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import exc
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import random
 
-
-file_path = os.path.abspath(os.getcwd())+"/database.db"
+abspath = os.path.abspath(os.getcwd())
+file_path = abspath + "/database.db"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'PotatoPatato'
@@ -129,7 +130,7 @@ def loging():
             if check_password_hash(user.password, form.password.data):
                 login_user(user, remember=False)
                 flash("Logged in as " + user.username, "info")
-                return redirect(url_for('workspace'))
+                return redirect(url_for('workspace', user_id=current_user.username))
             flash("Invalid username or password", "error")
             return redirect(url_for('loging'))
     return render_template('loging.html', form=form)
@@ -142,16 +143,24 @@ def register():
         hashed = generate_password_hash(form.password.data, method='sha256')
         new_user = User(username=form.username.data,
                         password=hashed)
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+        except exc.IntegrityError:
+            flash("Username already exists. Choose another one, please", "error")
+            return render_template('register.html', form=form)
         flash("You have successfully registered!", "info")
+        userpath = abspath+"/data/"+f"u_{form.username.data}"
+        os.mkdir(userpath)
+        os.mkdir(userpath+"/outputs")
+        os.mkdir(userpath+"/inputs")
         return redirect(url_for('index'))
     return render_template('register.html', form=form)
 
 
-@app.route('/workspace')
+@app.route('/workspace/<user_id>')
 @login_required
-def workspace():
+def workspace(user_id):
     return render_template('workspace.html')
 
 
