@@ -13,7 +13,6 @@ file_path = os.path.abspath(os.getcwd())+"/database.db"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-# Falta
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+file_path
 Bootstrap(app)
 db = SQLAlchemy(app)
@@ -36,15 +35,18 @@ class RegistrationForm(FlaskForm):
                                                                              max=80)])
 
 
-class User(UserMixin, db.Model):  # quizas hace falta unique id pa esto, tengo duda
+class User(UserMixin, db.Model):
     __tablename__ = 'User'
-    username = db.Column(db.String(25), primary_key=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(25), unique=True)
     password = db.Column(db.String(80))
+    analysiss = db.relationship('Analysis', backref='user')
+    filess = db.relationship('Files', backref='user')
 
 
 @login_manager.user_loader
-def load_user(username):
-    return User.query.get(str(username))
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 class Analysis(db.Model):
@@ -56,10 +58,9 @@ class Analysis(db.Model):
     Blastp = db.Column(db.Boolean)
     Date = db.Column(db.DateTime)
     Error = db.Column(db.String(80))
-    #user_id = db.Column(db.String(25), db.ForeignKey("User.username"))
-    #table_id = db.Column(db.Integer, db.ForeignKey("Table.id"))
-    #user = db.relationship("User", foreign_keys=[user_id])
-    #table = db.relationship("Table", foreign_keys=[table_id])
+    user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
+    table_id = db.Column(db.Integer, db.ForeignKey("Table.id"))
+    filess = db.relationship('Files', backref='analysis')
 
 
 class Files(db.Model):
@@ -68,16 +69,15 @@ class Files(db.Model):
     impout = db.Column(db.Boolean)
     path = db.Column(db.String(80))
     queryid = db.Column(db.Integer)
-    #user_id = db.Column(db.String(25), db.ForeignKey("User.username"))
-    #analysis_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
-    #user = db.relationship("User", foreign_keys=[user_id])
-    #analysis = db.relationship("Table", foreign_keys=[analysis_id])
+    user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
+    analysis_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
 class Table(db.Model):
     __tablename__ = 'Table'
     id = db.Column(db.Integer, primary_key=True)
     typetable = db.Column(db.Integer)
+    analysiss = db.relationship('Analysis', backref='table')
 
 
 @app.route('/')
@@ -92,9 +92,8 @@ def loging():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if check_password_hash(user.password, form.password.data):
-                #login_user(user, remember=True)
-                #return redirect(url_for('workspace'))
-                return '<h1>Works okey</h1>'
+                login_user(user, remember=False)
+                return redirect(url_for('workspace'))
             return '<h1>Invalid username or password</h1>'
     return render_template('loging.html', form=form)
 
@@ -114,8 +113,15 @@ def register():
 
 @app.route('/workspace')
 @login_required
-def dashboard():
-    return render_template('workspace.html')
+def workspace():
+    return render_template('workspace.html', name=current_user.username)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
