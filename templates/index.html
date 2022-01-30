@@ -1,5 +1,5 @@
 {% extends "bootstrap/base.html" %}
-{ % import "bootstrap/wtf.html" as wtf}
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block title %}
 AmphiProt
@@ -29,13 +29,17 @@ AmphiProt
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-
-    <div class="container">
-
-      <div class="starter-template">
-        <h1>Pollas en vinagre</h1>
-        <p class="lead">Holiwis</p>
-      </div>
+      <form class="form" method=POST>
+          {{ form.hidden_tag() }}
+          {{ wtf.form_field(form.PDB_id) }}
+          {{ wtf.form_field(form.UniProt_id) }}
+          {{ wtf.form_field(form.sequence) }}
+          {{ wtf.form_field(form.file) }}
+          {{ wtf.form_field(form.table) }}
+          {{ wtf.form_field(form.BLAST) }}
+          {{ wtf.form_field(form.isoelectric) }}
+          <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+      </form>
 
     </div><!-- /.container -->
 {% endblock %}
