@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, url_for
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
-from wtforms.validators import InputRequired, Length
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField
+from wtforms.validators import InputRequired, Length, Regexp
+from wtforms.widgets import TextArea, ListWidget
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -33,6 +34,19 @@ class RegistrationForm(FlaskForm):
                                                                            max=25)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8,
                                                                              max=80)])
+
+class Index_post_form(FlaskForm):
+    PDB_id = StringField('PDB_id', validators=[
+                         Length(min=4, max=4), Regexp('[0-9A-Za-z]')])
+    UniProt_id = StringField('UniProt_id', validators=[
+                             Length(min=4, max=16), Regexp('[0-9A-Za-z]')])
+    sequence = TextAreaField('Sequence', validators=[
+                             Length(min=50)], widget=TextArea())
+    file = FileField()
+    table = SelectField(
+        'Table', choices=[('cpp', 'C++'), ('py', 'Python'), ('text', 'Plain Text')])
+    BLAST = BooleanField('BLAST')
+    isoelectric = BooleanField('Isoelectric point')
 
 
 class User(UserMixin, db.Model):
@@ -82,7 +96,20 @@ class Table(db.Model):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    form = Index_post_form()
+    return render_template('index.html', form=form)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index_post():
+    form = Index_post_form()
+    PDB_id = form.PDB_id.data
+    UniProt_id = form.UniProt_id.data
+    sequence = form.sequence.data
+    table = form.table.data
+    BLAST = form.BLAST.data
+    isoelectric = form.isoelectric.data
+    return sequence
 
 
 @app.route('/loging', methods=['GET', 'POST'])
