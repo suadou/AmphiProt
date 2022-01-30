@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
+import random
 
 
 file_path = os.path.abspath(os.getcwd())+"/database.db"
@@ -35,9 +36,10 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8,
                                                                              max=80)])
 
+
 class Index_post_form(FlaskForm):
     PDB_id = StringField('PDB_id', validators=[
-                         Length(min=4, max=4), Regexp('[0-9A-Za-z]')])
+                                               Length(min=4, max=4), Regexp('[0-9A-Za-z]')])
     UniProt_id = StringField('UniProt_id', validators=[
                              Length(min=4, max=16), Regexp('[0-9A-Za-z]')])
     sequence = TextAreaField('Sequence', validators=[
@@ -90,18 +92,22 @@ class Files(db.Model):
 class Table(db.Model):
     __tablename__ = 'Table'
     id = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String(80))
     typetable = db.Column(db.Integer)
     analysiss = db.relationship('Analysis', backref='table')
 
 
 @app.route('/')
 def index():
+
     form = Index_post_form()
     return render_template('index.html', form=form)
 
 
 @app.route('/', methods=['GET', 'POST'])
-def index_post():
+def index_post(name=False):
+    if name is False:
+        name = str(random.randint(1e9, 1e10))
     form = Index_post_form()
     PDB_id = form.PDB_id.data
     UniProt_id = form.UniProt_id.data
@@ -109,7 +115,9 @@ def index_post():
     table = form.table.data
     BLAST = form.BLAST.data
     isoelectric = form.isoelectric.data
-    return sequence
+    if form.validate_on_submit():
+        return name
+    return render_template('index.html', form=form, name=name)
 
 
 @app.route('/loging', methods=['GET', 'POST'])
@@ -141,6 +149,7 @@ def register():
 @app.route('/workspace')
 @login_required
 def workspace():
+    return current_user.username
     return render_template('workspace.html', name=current_user.username)
 
 
