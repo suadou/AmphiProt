@@ -9,11 +9,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import random
+from flask_restful import Api, Resource, reqparse
 
 
 file_path = os.path.abspath(os.getcwd())+"/database.db"
 
 app = Flask(__name__)
+api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+file_path
 Bootstrap(app)
@@ -162,5 +164,40 @@ def logout():
     return redirect(url_for('index'))
 
 
+
+#### API stuff
+
+names_put_args = reqparse.RequestParser()
+names_put_args.add_argument("username", type=str, help="Please enter a valid username", required=True)
+names_put_args.add_argument("password", type=str, help="Please enter a valid password", required=True)
+
+
+names = {}
+
+class NewUser(Resource):
+    def put(self):
+        args = names_put_args.parse_args()
+        return args
+
+api.add_resource(NewUser, "/api_register")
+
+#@app.route('/api_register', methods=['POST'])
+#def register():
+    #form = RegistrationForm()
+#    if form.validate_on_submit():
+#        hashed = generate_password_hash(form.password.data, method='sha256')
+#        new_user = User(username=form.username.data,
+#                        password=hashed)
+#        db.session.add(new_user)
+#        db.session.commit()
+#        flash("You have successfully registered!", "info")
+#        return redirect(url_for('index'))
+#    return render_template('register.html', form=form)
+    #return jsonify({ 'username': new_user.username }), 201, {'Location': url_for('get_user', id = new_user.id, _external = True)}
+    #return {"Status": "Successfully registered"}
+
+
+
+# I left this at the end bc I am not sure if it has to be there?
 if __name__ == '__main__':
     app.run(debug=True)
