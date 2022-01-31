@@ -12,7 +12,7 @@ def read_table(table_name):
     return table
 
 def fourier(sequence, table, id_user, id_output):
-    hydro = [table[aa] for aa in list(sequence)]
+    hydro = [table.setdefault(aa, 0) for aa in list(sequence)]
     window = 25
     km = [1/25] * 25
     Mean = convolve(hydro, km, 'same')
