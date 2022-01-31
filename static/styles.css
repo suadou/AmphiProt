@@ -17,21 +17,23 @@
 body {
   background-color: #cfffdb;
   padding-top: 100px;
-  margin-left: 360px;
-  margin-right: 360px;
+  margin-left: 5%;
+  margin-right: 5%;
   font-family: 'Montserrat', sans-serif;
 }
 
 form.form-signin{
   text-align: center;
   color: #004d13;
-  margin-left: 360px;
-  margin-right: 360px;
+  margin-left: 30%;
+  margin-right: 30%;
 
 }
 
 form.form{
   color: #004d13;
+  margin-left: 20%;
+  margin-right: 20%;
 }
 
 h2.form-signin-heading{
