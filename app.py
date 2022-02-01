@@ -160,6 +160,11 @@ def register():
     return render_template('register.html', form=form)
 
 
+@app.route('/help')
+def help():
+    return render_template('help.html')
+
+
 @app.route('/workspace/<user_id>')
 @login_required
 def workspace(user_id):
