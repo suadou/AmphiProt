@@ -46,6 +46,33 @@ h2.form-signin-heading{
 
 }
 
+h1.help{
+  text-align: center;
+  color: #004d13;
+  margin-bottom: 50px;
+  
+}
+
+h2.help{
+  color: #004d13;
+  margin-bottom: 20px;
+  margin-top: 30px;
+  
+}
+
+p.help{
+  text-align: justify;
+  color: #004d13;
+  
+}
+
+li.help{
+  text-align: justify;
+  color: #004d13;
+  margin: 10px;
+  
+}
+
 .btn-primary {
     color: #e8e8e8;
     background-color: #00a329;
