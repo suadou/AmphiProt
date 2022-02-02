@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField
-from wtforms.validators import InputRequired, Length, Regexp
+from wtforms.validators import InputRequired, Length, Regexp, Optional
 from wtforms.widgets import TextArea, ListWidget
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import exc
