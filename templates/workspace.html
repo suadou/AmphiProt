@@ -8,6 +8,11 @@ Dashboard
 {% block styles %}
 {% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='node_modules/ngl/dist/ngl.js')}}"></script>
+{{super()}}
+{% endblock %}
+
 {% block content %}
 {% with messages = get_flashed_messages() %}
   {% if messages %}
@@ -24,6 +29,13 @@ Dashboard
     <h1>Protected shit, get out</h1>
     <p class="lead">Holiwis</p>
   </div>
-
+  <script>
+  var stage;
+  document.addEventListener("DOMContentLoaded", function () {
+  stage = new NGL.Stage("viewport");
+  stage.loadFile("{{ url_for('static', filename='1mee.pdb') }}", {defaultRepresentation: true});
+  });
+  </script>
+  <div id="viewport" style="width:800px; height:800px;"></div>
 </div><!-- /.container -->
 {% endblock %}
