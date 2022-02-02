@@ -209,6 +209,28 @@ api.add_resource(NewUser, "/api_register")
 #    return render_template('register.html', form=form)
     #return jsonify({ 'username': new_user.username }), 201, {'Location': url_for('get_user', id = new_user.id, _external = True)}
     #return {"Status": "Successfully registered"}
+    
+
+########## Functions ##########################################################
+
+def check_fasta_input(input):
+    import re
+    seq = ""
+    header = False
+    for line in input:
+        if header:
+            seq += line.strip('\n')
+        if '>' in line and header == False:
+            line = line.strip('\n')
+            id = line[1:].strip('\n')
+            header = True
+        if header == False:
+            return False
+    alphabets = re.compile('^[acdefghiklmnpqrstvwy]*$', re.I)
+    if alphabets.search(seq) is not None:
+         return (id, seq)
+    else:
+         return False
 
 
 
