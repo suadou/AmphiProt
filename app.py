@@ -13,12 +13,11 @@ import random
 from flask_restful import Api, Resource, reqparse
 
 abspath = os.path.abspath(os.getcwd())
-file_path = abspath + "/database.db"
 
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+file_path
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -28,16 +27,20 @@ login_manager.login_view = 'loging'
 
 class LogingForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4,
-                                                                           max=25)])
+                                                                           max=50)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8,
-                                                                             max=80)])
+                                                                             max=255)])
+    rememberme = BooleanField('Do you want to be remembered?')
 
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4,
-                                                                           max=25)])
+                                                                           max=50)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8,
-                                                                             max=80)])
+                                                                             max=255)])
+    email = StringField('Email', validators=[InputRequired()])
+    affiliation = StringField('Affiliation', validators=[InputRequired()])
+    country = StringField('Country', validators=[InputRequired()])
 
 
 class Index_post_form(FlaskForm):
@@ -55,10 +58,12 @@ class Index_post_form(FlaskForm):
 class User(UserMixin, db.Model):
     __tablename__ = 'User'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(25), unique=True)
-    password = db.Column(db.String(80))
+    username = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True)
+    country = db.Column(db.String(255))
+    affiliation = db.Column(db.String(255))
     analysiss = db.relationship('Analysis', backref='user')
-    filess = db.relationship('Files', backref='user')
 
 
 @login_manager.user_loader
@@ -69,33 +74,30 @@ def load_user(user_id):
 class Analysis(db.Model):
     __tablename__ = 'Analysis'
     id = db.Column(db.Integer, primary_key=True)
-    Ampreg = db.Column(db.Boolean)
-    Hydro = db.Column(db.Boolean)
-    Isopoint = db.Column(db.Boolean)
-    Blastp = db.Column(db.Boolean)
     Date = db.Column(db.DateTime)
-    Error = db.Column(db.String(80))
+    Error = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
-    table_id = db.Column(db.Integer, db.ForeignKey("Table.id"))
     filess = db.relationship('Files', backref='analysis')
-
+    optionss = db.relationship('Options', backref='analysis')
 
 class Files(db.Model):
     __tablename__ = 'Files'
     id = db.Column(db.Integer, primary_key=True)
     impout = db.Column(db.Boolean)
-    path = db.Column(db.String(80))
+    path = db.Column(db.String(255))
     queryid = db.Column(db.Integer)
-    user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
-    analysis_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
+    analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
-class Table(db.Model):
-    __tablename__ = 'Table'
+class Options(db.Model):
+    __tablename__ = 'Options'
     id = db.Column(db.Integer, primary_key=True)
-    path = db.Column(db.String(80))
-    typetable = db.Column(db.Integer)
-    analysiss = db.relationship('Analysis', backref='table')
+    Ampreg = db.Column(db.Boolean)
+    Hydro = db.Column(db.Boolean)
+    Isopoint = db.Column(db.Boolean)
+    Blastp = db.Column(db.Boolean)
+    table = db.Column(db.String(255))
+    analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
 @app.route('/')
@@ -159,7 +161,7 @@ def loging():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if check_password_hash(user.password, form.password.data):
-                login_user(user, remember=False)
+                login_user(user, remember=form.rememberme.data)
                 flash("Logged in as " + user.username, "info")
                 return redirect(url_for('workspace', user_id=current_user.username))
             flash("Invalid username or password", "error")
@@ -173,12 +175,14 @@ def register():
     if form.validate_on_submit():
         hashed = generate_password_hash(form.password.data, method='sha256')
         new_user = User(username=form.username.data,
-                        password=hashed)
+                        password=hashed, email=form.email.data,
+                        country=form.country.data,
+                        affiliation=form.affiliation.data)
         try:
             db.session.add(new_user)
             db.session.commit()
         except exc.IntegrityError:
-            flash("Username already exists. Choose another one, please", "error")
+            flash("Username/email already in use. Choose another one, please", "error")
             return render_template('register.html', form=form)
         flash("You have successfully registered!", "info")
         userpath = abspath+"/data/"+f"u_{form.username.data}"
