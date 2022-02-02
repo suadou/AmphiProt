@@ -41,17 +41,15 @@ class RegistrationForm(FlaskForm):
 
 
 class Index_post_form(FlaskForm):
-    PDB_id = StringField('PDB_id', validators=[
-                                               Length(min=4, max=4), Regexp('[0-9A-Za-z]')])
-    UniProt_id = StringField('UniProt_id', validators=[
-                             Length(min=4, max=16), Regexp('[0-9A-Za-z]')])
-    sequence = TextAreaField('Sequence', validators=[
-                             Length(min=50)], widget=TextArea())
+    PDB_id = StringField('PDB id', validators=[Optional(), Length(min=4, max=4), Regexp("[A-Za-z0-9]", message="PDB id can only contain letters and numbers")])
+    UniProt_id = StringField('UniProt id', validators=[Optional(), Length(min=4, max=16), Regexp("[A-Za-z0-9]", message="UniProt id can only contain letters and numbers")])
+    sequence = TextAreaField('Sequence', validators=[Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
         'Table', choices=[('cpp', 'C++'), ('py', 'Python'), ('text', 'Plain Text')])
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
+
 
 
 class User(UserMixin, db.Model):
@@ -109,18 +107,49 @@ def index():
 @app.route('/', methods=['GET', 'POST'])
 def index_post():
     form = Index_post_form()
-    PDB_id = form.PDB_id.data
-    UniProt_id = form.UniProt_id.data
-    sequence = form.sequence.data
-    table = form.table.data
-    BLAST = form.BLAST.data
-    isoelectric = form.isoelectric.data
+    data = {}
+    if form.PDB_id.data:
+        data["PDB_id"] = form.PDB_id.data
+    elif form.UniProt_id.data:
+        data["UniProt_id"] = form.UniProt_id.data
+    elif form.sequence.data:
+        data["sequence"] = form.sequence.data
+        if check_fasta_input(data["sequence"]) == False:
+            flash("FASTA format not correct. Remeber it is mandatory a '>' header. Sequence must contain only amino acids letters.", "error")
+            return  render_template('index.html', form=form)
+        else:
+            data["sequence"]=check_fasta_input(data["sequence"])
+            if len(data["sequence"]) < 50 or len(data["sequence"]) > 1000:
+                flash("Sequence must contain 50 to 1000 amino acids", "error")
+                return  render_template('index.html', form=form)
+    else:
+        return redirect(url_for('index'))
+    data["table"] = form.table.data
+    data["BLAST"] = form.BLAST.data
+    data["isoelectric"] = form.isoelectric.data
     if form.validate_on_submit():
         if current_user.is_anonymous:
-            name = str(random.randint(1e9, 1e10))
+            data["name"] = str(random.randint(1e9, 1e10))
+            with open(f"data/{name}/{name}_input.json", 'w') as fp:
+                json.dump(data, fp)
+                fp.close()
         else:
-            name = current_user.username
-    return render_template('index.html', form=form)
+
+
+            with open(f"data/u_{name}/{input_id}_input.json", 'w') as fp:
+                json.dump(data, fp)
+                fp.close()
+                return redirect(url_for('loading'), analysis=current_analysis.analysis_id)
+    return  render_template('index.html', form=form)
+
+@app.route('/loading', methods =['GET','POST'])
+def loading(analysis, name=None):
+    if name:
+        data = json.load(f"data/{name}/{name}_input.json")
+    else:
+        data = json.load(f"data/u_{name}/{input_id}_input.json")
+
+    return render_template('loading.html')
 
 
 @app.route('/loging', methods=['GET', 'POST'])
