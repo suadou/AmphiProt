@@ -12,6 +12,16 @@ AmphiProt
 {% endblock %}
 
 {% block content %}
+# Flash massages can be integrated some how in the template, can't it? It seem very different if is a error on the form or if it's a flash message
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
