@@ -255,7 +255,7 @@ def check_fasta_input(input):
             header = True
         if header == False:
             return False
-    alphabets = re.compile('^[acdefghiklmnpqrstvwy]*$', re.I)
+    alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
     if alphabets.search(seq) is not None:
          return (id, seq)
     else:
