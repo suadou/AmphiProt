@@ -182,13 +182,20 @@ def register():
             db.session.add(new_user)
             db.session.commit()
         except exc.IntegrityError:
+            db.session.rollback()
             flash("Username/email already in use. Choose another one, please", "error")
             return render_template('register.html', form=form)
+        finally:
+            db.session.close()
         flash("You have successfully registered!", "info")
         userpath = abspath+"/data/"+f"u_{form.username.data}"
-        os.mkdir(userpath)
-        os.mkdir(userpath+"/outputs")
-        os.mkdir(userpath+"/inputs")
+        try:
+            os.mkdir(userpath)
+            os.mkdir(userpath+"/outputs")
+            os.mkdir(userpath+"/inputs")
+        except OSError:
+            flash("Something went very wrong. Start again please.", "error")
+            return render_template('register.html', form=form)
         return redirect(url_for('index'))
     return render_template('register.html', form=form)
 
