@@ -271,7 +271,7 @@ def check_fasta_input(input):
          return (id, seq)
     else:
          return False
- def read_table(table_int):
+def read_table(table_int):
     table = {}
     fd = open("/.../tables/{table_name}", 'r')
     for line in fd:
