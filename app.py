@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField, EmailField
 from wtforms.validators import InputRequired, Length, Regexp, Optional
 from wtforms.widgets import TextArea, ListWidget
 from flask_sqlalchemy import SQLAlchemy
@@ -38,7 +38,7 @@ class RegistrationForm(FlaskForm):
                                                                            max=50)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=8,
                                                                              max=255)])
-    email = StringField('Email', validators=[InputRequired()])
+    email = EmailField('Email', validators=[InputRequired()])
     affiliation = StringField('Affiliation', validators=[InputRequired()])
     country = StringField('Country', validators=[InputRequired()])
 
@@ -53,6 +53,13 @@ class Index_post_form(FlaskForm):
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
+
+Options_table = db.Table('Options_table',
+                         db.Column('Analysis_id', db.Integer,
+                                   db.ForeignKey("Analysis.id")),
+                         db.Column('Options_id', db.Integer,
+                                   db.ForeignKey("Options.id"))
+                         )
 
 
 class User(UserMixin, db.Model):
@@ -78,7 +85,8 @@ class Analysis(db.Model):
     Error = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
     filess = db.relationship('Files', backref='analysis')
-    optionss = db.relationship('Options', backref='analysis')
+    options = db.relationship(
+        'Options', secondary=Options_table, backref='analysis')
 
 class Files(db.Model):
     __tablename__ = 'Files'
@@ -92,12 +100,9 @@ class Files(db.Model):
 class Options(db.Model):
     __tablename__ = 'Options'
     id = db.Column(db.Integer, primary_key=True)
-    Ampreg = db.Column(db.Boolean)
-    Hydro = db.Column(db.Boolean)
-    Isopoint = db.Column(db.Boolean)
-    Blastp = db.Column(db.Boolean)
+    alltypes = db.Column(db.String(255))
+    description = db.Column(db.String(255))
     table = db.Column(db.String(255))
-    analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
 @app.route('/')
