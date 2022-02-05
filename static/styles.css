@@ -23,6 +23,32 @@ body {
   padding-bottom: 200px;
 }
 
+.alert {
+  padding: 20px;
+  background-color: mediumaquamarine;
+  color: black;
+  font-weight: bold;
+  margin-bottom: 15px;
+  margin-left: 10%;
+  margin-right: 50%;
+}
+
+/* The close button */
+.closebtn {
+  margin-left: 15px;
+  color: white;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.closebtn:hover {
+  color: black;
+}
+
 form.form-signin{
   text-align: center;
   color: #004d13;
