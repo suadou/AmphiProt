@@ -16,8 +16,7 @@ import random
 import json
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
-
-from Amphipathic import fourier, read_table
+import requests 
 
 abspath = os.path.abspath(os.getcwd())
 
@@ -187,16 +186,33 @@ def loading(out):
         table=read_table("Eisenberg")
     if "PDB_id" in data:
         try:
-            return data["PDB_id"]
-               # return protein
-               # fourier(protein[1], table, data["name"], out)
-            return DOne
+            for sequence in parsepdbgen(data["PDB_id"]):
+                fourier(sequence[1], table, data["name"], out)
+            return "Done"
         except:
             error
     elif "UniProt_id" in data:
-        return done
+        try:
+            for sequence in parseunicode(data["UniProt_id"]):
+                fourier(sequence[1], table, data["name"], out)
+            return "done"
+        except:
+            error
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
+        if not current_user.is_anonymous:
+            new_file = Files( impout = False, path ="data/u_"+current_user.username+"/outputs/"+str(out)+"_Fourier.png",  analyss_id = out)
+            try:
+                db.session.add(new_file)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()
+            new_file = Files( impout = False, path ="data/u_"+current_user.username+"/outputs/"+str(out)+"_hydroplot.png",  analyss_id = out)
+            try:
+                db.session.add(new_file)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()
         return "done"
     else:
         error
