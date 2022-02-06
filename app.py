@@ -1,3 +1,6 @@
+from distutils.log import error
+from http.client import FORBIDDEN
+from turtle import done
 from flask import Flask, render_template, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
@@ -10,14 +13,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import random
+import json
 from flask_restful import Api, Resource, reqparse
+from datetime import datetime
+
+from Amphipathic import fourier, read_table
 
 abspath = os.path.abspath(os.getcwd())
 
 app = Flask(__name__)
 api = Api(app)
-app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
+app.config['SECRET_KEY'] = 'guapeton'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:guapeton@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -49,7 +56,7 @@ class Index_post_form(FlaskForm):
     sequence = TextAreaField('Sequence', validators=[Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
-        'Table', choices=[('cpp', 'C++'), ('py', 'Python'), ('text', 'Plain Text')])
+        'Table', choices=[(1, 'Eisenberg'), (2, 'Kyte & Doolittle'), (3, 'Chotia'), (4, 'Janin'), (5, 'Tanford'), (6, 'VonHeijen-Blomberg'), (7, 'Wimley'), (8, 'Wolfenden')])
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
@@ -126,7 +133,7 @@ def index_post():
             return  render_template('index.html', form=form)
         else:
             data["sequence"]=check_fasta_input(data["sequence"])
-            if len(data["sequence"]) < 50 or len(data["sequence"]) > 1000:
+            if len(data["sequence"][1]) < 50 or len(data["sequence"][1]) > 1000:
                 flash("Sequence must contain 50 to 1000 amino acids", "error")
                 return  render_template('index.html', form=form)
     else:
@@ -137,24 +144,63 @@ def index_post():
     if form.validate_on_submit():
         if current_user.is_anonymous:
             data["name"] = str(random.randint(1e9, 1e10))
-            with open(f"data/{name}/{name}_input.json", 'w') as fp:
+            path = "data/"+data["name"]
+            os.mkdir(path)
+            with open("data/"+data["name"]+"/"+data["name"]+"_input.json", 'w') as fp:
                 json.dump(data, fp)
                 fp.close()
+                return redirect(url_for('loading', out=data["name"]))
         else:
-
-
-            with open(f"data/u_{name}/{input_id}_input.json", 'w') as fp:
+            data["name"]=current_user.username
+            new_analysis = Analysis( Date = datetime.now(), Error = None, user_id = current_user.get_id())
+            try:
+                db.session.add(new_analysis)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()
+                return render_template('loading.html', form=form)
+            #if data["BLAST"]:
+             #   new_option = Options( alltypes = db.Column(db.String(255))
+            with open("data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                 json.dump(data, fp)
                 fp.close()
-                return redirect(url_for('loading'), analysis=current_analysis.analysis_id)
+            new_file = Files( impout = True, path ="data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json",  analyss_id = new_analysis.id)
+            try:
+                db.session.add(new_file)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()
+                return render_template('loading.html', form=form)
+            return redirect(url_for('loading', out=new_analysis.id))
     return  render_template('index.html', form=form)
 
-@app.route('/loading', methods =['GET','POST'])
-def loading(analysis, name=None):
-    if name:
-        data = json.load(f"data/{name}/{name}_input.json")
+@app.route('/loading/<out>', methods =['GET', 'POST'])
+def loading(out):
+    if current_user.is_anonymous:
+        f = open("data/"+out+"/"+out+"_input.json")
+        data = json.load(f)
     else:
-        data = json.load(f"data/u_{name}/{input_id}_input.json")
+        f = open("data/u_"+current_user.username+"/inputs/"+str(out)+"_input.json")
+        data = json.load(f)
+        data["name"]="u_"+data["name"]+"/outputs"
+    if data["table"]:
+        table=read_table("Eisenberg")
+    if "PDB_id" in data:
+        try:
+            return data["PDB_id"]
+               # return protein
+               # fourier(protein[1], table, data["name"], out)
+            return DOne
+        except:
+            error
+    elif "UniProt_id" in data:
+        return done
+    elif "sequence" in data:
+        fourier(data["sequence"][1], table, data["name"], out)
+        return "done"
+    else:
+        error
+
 
     return render_template('loading.html')
 
@@ -262,12 +308,11 @@ def check_fasta_input(input):
     import re
     seq = ""
     header = False
-    for line in input:
+    for line in input.split("\n"):
         if header:
-            seq += line.strip('\n')
+            seq += line.strip('\r')
         if '>' in line and header == False:
-            line = line.strip('\n')
-            id = line[1:].strip('\n')
+            id = line[1:].strip('\r')
             header = True
         if header == False:
             return False
@@ -276,20 +321,20 @@ def check_fasta_input(input):
          return (id, seq)
     else:
          return False
+         
 def read_table(table_int):
     table = {}
-    fd = open("/.../tables/{table_name}", 'r')
+    fd = open("./tables/"+table_int, 'r')
     for line in fd:
         line = line.strip()
         (key, val) = line.split(" ")
         table[key] = val
     return table
 
-def fourier(sequence, table, id_user, id_output):
-    from numpy import convolve, fft, mean, matrix, square
+def fourier(sequence, table, user, analysis):
     from matplotlib import pyplot, transforms
-    hydro = [table[aa] for aa in list(sequence)]
-    window = 25
+    from numpy import convolve, fft, mean, matrix, square
+    hydro = [float(table[aa]) for aa in list(sequence)]
     km = [1/25] * 25
     Mean = convolve(hydro, km, 'same')
     y = 12
@@ -314,7 +359,7 @@ def fourier(sequence, table, id_user, id_output):
     pyplot.contourf(I[0:len(hydro)+12, 0:12])
     pyplot.xticks([25/3.6, 11], ["1/3.6", "1/2"])
     pyplot.grid(color='w', linestyle='-', linewidth=0.75)
-    pyplot.savefig("Algo/{id_user}/{id_output}_Fourier.png")
+    pyplot.savefig("./data/"+user+"/"+analysis+"_Fourier.png")
     pyplot.figure(figsize=(3, 7))
     km = [1/15] * 15
     base = pyplot.gca().transData
@@ -322,8 +367,72 @@ def fourier(sequence, table, id_user, id_output):
     pyplot.plot(convolve(hydro, km, 'same'), 'r', transform=rot + base)
     pyplot.grid(color='b', linestyle='-', linewidth=0.75)
     pyplot.ylim([1, len(I)])
-    pyplot.savefig("Algo/{id_user}/{id_output}_hydroplot.png")
+    pyplot.savefig("./data/"+user+"/"+analysis+"_hydroplot.png")
 
+def unidown(code):
+    url = "https://www.uniprot.org/uniprot/" + code + ".fasta"
+    r = requests.get(url, allow_redirects=True).content.decode("utf-8")
+    return r
+
+
+def pdbdown(code):
+    url = "https://www.rcsb.org/fasta/entry/" + code + "/download"
+    r = requests.get(url, allow_redirects=True).content.decode("utf-8")
+    return r
+
+
+def parsepdbgen(code):
+    actual_protein = None
+    sequence = ""
+    string = pdbdown(code)
+    for line in string.split("\n"):
+        if line.startswith(">"):
+            if actual_protein is None:
+                line = line.split("|")
+                actual_protein = line[0].lstrip(">")
+                continue
+            yield tuple([actual_protein, sequence])
+            line = line.split("|")
+            actual_protein = line[0].lstrip(">")
+            sequence = ""
+            continue
+        sequence += line
+    yield tuple([actual_protein, sequence])
+
+
+def parseunicode(code):
+    actual_protein = None
+    sequence = ""
+    string = unidown(code)
+    for line in string.split("\n"):
+        if line.startswith(">"):
+            if actual_protein is None:
+                line = line.split("|")
+                actual_protein = line[1]
+                continue
+            yield tuple([actual_protein, sequence])
+            line = line.split("|")
+            actual_protein = line[1]
+            sequence = ""
+            continue
+        sequence += line
+    yield tuple([actual_protein, sequence])
+
+
+def parsedmulti(string):
+    actual_protein = None
+    sequence = ""
+    for line in string.split("\n"):
+        if line.startswith(">"):
+            if actual_protein is None:
+                actual_protein = line
+                continue
+            yield tuple([actual_protein, sequence])
+            actual_protein = line
+            sequence = ""
+            continue
+        sequence += line
+    yield tuple([actual_protein, sequence])
 
 
 # I left this at the end bc I am not sure if it has to be there?
