@@ -16,14 +16,14 @@ import random
 import json
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
-import requests 
+import requests
 
 abspath = os.path.abspath(os.getcwd())
 
 app = Flask(__name__)
 api = Api(app)
-app.config['SECRET_KEY'] = 'guapeton'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:guapeton@127.0.0.1/dbwdatabase'
+app.config['SECRET_KEY'] = 'PotatoPatato'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -50,9 +50,12 @@ class RegistrationForm(FlaskForm):
 
 
 class Index_post_form(FlaskForm):
-    PDB_id = StringField('PDB id', validators=[Optional(), Length(min=4, max=4), Regexp("[A-Za-z0-9]", message="PDB id can only contain letters and numbers")])
-    UniProt_id = StringField('UniProt id', validators=[Optional(), Length(min=4, max=16), Regexp("[A-Za-z0-9]", message="UniProt id can only contain letters and numbers")])
-    sequence = TextAreaField('Sequence', validators=[Optional(), Length(min=50, max=1000)])
+    PDB_id = StringField('PDB id', validators=[Optional(), Length(min=4, max=4), Regexp(
+        "[A-Za-z0-9]", message="PDB id can only contain letters and numbers")])
+    UniProt_id = StringField('UniProt id', validators=[Optional(), Length(min=4, max=16), Regexp(
+        "[A-Za-z0-9]", message="UniProt id can only contain letters and numbers")])
+    sequence = TextAreaField('Sequence', validators=[
+                             Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
         'Table', choices=[(1, 'Eisenberg'), (2, 'Kyte & Doolittle'), (3, 'Chotia'), (4, 'Janin'), (5, 'Tanford'), (6, 'VonHeijen-Blomberg'), (7, 'Wimley'), (8, 'Wolfenden')])
@@ -94,6 +97,7 @@ class Analysis(db.Model):
     options = db.relationship(
         'Options', secondary=Options_table, backref='analysis')
 
+
 class Files(db.Model):
     __tablename__ = 'Files'
     id = db.Column(db.Integer, primary_key=True)
@@ -129,12 +133,12 @@ def index_post():
         data["sequence"] = form.sequence.data
         if check_fasta_input(data["sequence"]) == False:
             flash("FASTA format not correct. Remeber it is mandatory a '>' header. Sequence must contain only amino acids letters.", "error")
-            return  render_template('index.html', form=form)
+            return render_template('index.html', form=form)
         else:
-            data["sequence"]=check_fasta_input(data["sequence"])
+            data["sequence"] = check_fasta_input(data["sequence"])
             if len(data["sequence"][1]) < 50 or len(data["sequence"][1]) > 1000:
                 flash("Sequence must contain 50 to 1000 amino acids", "error")
-                return  render_template('index.html', form=form)
+                return render_template('index.html', form=form)
     else:
         return redirect(url_for('index'))
     data["table"] = form.table.data
@@ -143,15 +147,16 @@ def index_post():
     if form.validate_on_submit():
         if current_user.is_anonymous:
             data["name"] = str(random.randint(1e9, 1e10))
-            path = "data/"+data["name"]
+            path = "static/data/"+data["name"]
             os.mkdir(path)
-            with open("data/"+data["name"]+"/"+data["name"]+"_input.json", 'w') as fp:
+            with open("static/data/"+data["name"]+"/"+data["name"]+"_input.json", 'w') as fp:
                 json.dump(data, fp)
                 fp.close()
                 return redirect(url_for('loading', out=data["name"]))
         else:
-            data["name"]=current_user.username
-            new_analysis = Analysis( Date = datetime.now(), Error = None, user_id = current_user.get_id())
+            data["name"] = current_user.username
+            new_analysis = Analysis(
+                Date=datetime.now(), Error=None, user_id=current_user.get_id())
             try:
                 db.session.add(new_analysis)
                 db.session.commit()
@@ -160,10 +165,11 @@ def index_post():
                 return render_template('loading.html', form=form)
             #if data["BLAST"]:
              #   new_option = Options( alltypes = db.Column(db.String(255))
-            with open("data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+            with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                 json.dump(data, fp)
                 fp.close()
-            new_file = Files( impout = True, path ="data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json",  analyss_id = new_analysis.id)
+            new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                             + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
             try:
                 db.session.add(new_file)
                 db.session.commit()
@@ -171,19 +177,21 @@ def index_post():
                 db.session.rollback()
                 return render_template('loading.html', form=form)
             return redirect(url_for('loading', out=new_analysis.id))
-    return  render_template('index.html', form=form)
+    return render_template('index.html', form=form)
 
-@app.route('/loading/<out>', methods =['GET', 'POST'])
+
+@app.route('/loading/<out>', methods=['GET', 'POST'])
 def loading(out):
     if current_user.is_anonymous:
-        f = open("data/"+out+"/"+out+"_input.json")
+        f = open("static/data/"+out+"/"+out+"_input.json")
         data = json.load(f)
     else:
-        f = open("data/u_"+current_user.username+"/inputs/"+str(out)+"_input.json")
+        f = open("static/data/u_"+current_user.username
+                 + "/inputs/"+str(out)+"_input.json")
         data = json.load(f)
-        data["name"]="u_"+data["name"]+"/outputs"
+        data["name"] = "u_"+data["name"]+"/outputs"
     if data["table"]:
-        table=read_table("Eisenberg")
+        table = read_table("Eisenberg")
     if "PDB_id" in data:
         try:
             for sequence in parsepdbgen(data["PDB_id"]):
@@ -201,22 +209,26 @@ def loading(out):
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
         if not current_user.is_anonymous:
-            new_file = Files( impout = False, path ="data/u_"+current_user.username+"/outputs/"+str(out)+"_Fourier.png",  analyss_id = out)
+            new_file = Files(impout=False, path="data/u_"+current_user.username
+                             + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
+
             try:
                 db.session.add(new_file)
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
-            new_file = Files( impout = False, path ="data/u_"+current_user.username+"/outputs/"+str(out)+"_hydroplot.png",  analyss_id = out)
+            new_file = Files(impout=False, path="data/u_"+current_user.username
+                             + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+
             try:
                 db.session.add(new_file)
                 db.session.commit()
+
             except exc.IntegrityError:
                 db.session.rollback()
-        return "done"
+        return redirect(url_for('output', analysis_id=out))
     else:
         error
-
 
     return render_template('loading.html')
 
@@ -224,6 +236,9 @@ def loading(out):
 @app.route('/loging', methods=['GET', 'POST'])
 def loging():
     form = LogingForm()
+    if current_user.is_authenticated:
+        flash("Already logged in, please logout.", "info")
+        return redirect(url_for('index'))  # or whatever.
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
@@ -239,6 +254,9 @@ def loging():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
+    if current_user.is_authenticated:
+        flash("Already logged in, please logout.", "info")
+        return redirect(url_for('index'))
     if form.validate_on_submit():
         hashed = generate_password_hash(form.password.data, method='sha256')
         new_user = User(username=form.username.data,
@@ -255,7 +273,7 @@ def register():
         finally:
             db.session.close()
         flash("You have successfully registered!", "info")
-        userpath = abspath+"/data/"+f"u_{form.username.data}"
+        userpath = abspath+"/static/data/"+f"u_{form.username.data}"
         try:
             os.mkdir(userpath)
             os.mkdir(userpath+"/outputs")
@@ -272,39 +290,60 @@ def help():
     return render_template('help.html')
 
 
+@app.route('/output/<analysis_id>')
+def output(analysis_id):
+    analysis = Analysis.query.filter_by(id=analysis_id).first()
+    user = User.query.filter_by(username=current_user.username).first()
+    if analysis.user_id != user.id:
+        flash("You are not authorized here.", "error")
+        return redirect(url_for('index'))
+    files = Files.query.filter_by(analyss_id=analysis_id)
+    list = [str(files[1].path), str(files[2].path)]
+    return render_template('output.html', list=list)
+
+
 @app.route('/workspace/<user_id>')
 @login_required
 def workspace(user_id):
-    return render_template('workspace.html')
+    user = User.query.filter_by(username=current_user.username).first()
+    analysis = Analysis.query.filter_by(user_id=user.id)
+    list = []
+    for x in analysis:
+        files = Files.query.filter_by(analyss_id=x.id)
+        list += [files]
+    return render_template('workspace.html', analysiss=analysis, list=list)
 
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash("You are now logged out", "info")
     return redirect(url_for('index'))
 
 
-
 #### API stuff
-
 names_put_args = reqparse.RequestParser()
-names_put_args.add_argument("username", type=str, help="Please enter a valid username", required=True)
-names_put_args.add_argument("password", type=str, help="Please enter a valid password", required=True)
+names_put_args.add_argument(
+    "username", type=str, help="Please enter a valid username", required=True)
+names_put_args.add_argument(
+    "password", type=str, help="Please enter a valid password", required=True)
 
 
 names = {}
+
 
 class NewUser(Resource):
     def put(self):
         args = names_put_args.parse_args()
         return args
 
+
 api.add_resource(NewUser, "/api_register")
 
 #@app.route('/api_register', methods=['POST'])
 #def register():
-    #form = RegistrationForm()
+#form = RegistrationForm()
 #    if form.validate_on_submit():
 #        hashed = generate_password_hash(form.password.data, method='sha256')
 #        new_user = User(username=form.username.data,
@@ -314,9 +353,9 @@ api.add_resource(NewUser, "/api_register")
 #        flash("You have successfully registered!", "info")
 #        return redirect(url_for('index'))
 #    return render_template('register.html', form=form)
-    #return jsonify({ 'username': new_user.username }), 201, {'Location': url_for('get_user', id = new_user.id, _external = True)}
-    #return {"Status": "Successfully registered"}
-    
+#return jsonify({ 'username': new_user.username }), 201, {'Location': url_for('get_user', id = new_user.id, _external = True)}
+#return {"Status": "Successfully registered"}
+
 
 ########## Functions ##########################################################
 
@@ -334,10 +373,11 @@ def check_fasta_input(input):
             return False
     alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
     if alphabets.search(seq) is not None:
-         return (id, seq)
+        return (id, seq)
     else:
-         return False
-         
+        return False
+
+
 def read_table(table_int):
     table = {}
     fd = open("./tables/"+table_int, 'r')
@@ -346,6 +386,7 @@ def read_table(table_int):
         (key, val) = line.split(" ")
         table[key] = val
     return table
+
 
 def fourier(sequence, table, user, analysis):
     from matplotlib import pyplot, transforms
@@ -375,7 +416,7 @@ def fourier(sequence, table, user, analysis):
     pyplot.contourf(I[0:len(hydro)+12, 0:12])
     pyplot.xticks([25/3.6, 11], ["1/3.6", "1/2"])
     pyplot.grid(color='w', linestyle='-', linewidth=0.75)
-    pyplot.savefig("./data/"+user+"/"+analysis+"_Fourier.png")
+    pyplot.savefig("./static/data/"+user+"/"+analysis+"_Fourier.png")
     pyplot.figure(figsize=(3, 7))
     km = [1/15] * 15
     base = pyplot.gca().transData
@@ -383,7 +424,8 @@ def fourier(sequence, table, user, analysis):
     pyplot.plot(convolve(hydro, km, 'same'), 'r', transform=rot + base)
     pyplot.grid(color='b', linestyle='-', linewidth=0.75)
     pyplot.ylim([1, len(I)])
-    pyplot.savefig("./data/"+user+"/"+analysis+"_hydroplot.png")
+    pyplot.savefig("./static/data/"+user+"/"+analysis+"_hydroplot.png")
+
 
 def unidown(code):
     url = "https://www.uniprot.org/uniprot/" + code + ".fasta"
