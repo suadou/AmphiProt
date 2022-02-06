@@ -54,5 +54,36 @@ Dashboard
     <div class="exclusion-y"></div>
   </div>
 </div>
+
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Analysis_Id</th>
+        <th>Date</th>
+        <th>Input</th>
+        <th>Outputs</th>
+
+      </tr>
+    </thead>
+    <tbody>
+      {% set count = [] %}
+      {% for analysis in analysiss %}
+
+        <tr>
+          <td>{{ analysis.id }}</td>
+          <td>{{ analysis.Date }}</td>
+          {% set x = count|length %}
+          <td> <a href="{{ url_for('.static', filename=list[x][0].path) }}">
+            Input</a>
+             </td>
+          <td><a href="{{ url_for('output', analysis_id=analysis.id) }}">
+            Output</a></td>
+        </tr>
+      {% set __ = count.append(1) %}
+      {% endfor %}
+    </tbody>
+  </table>
+
 </body>
+
 {% endblock %}
