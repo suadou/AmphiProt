@@ -15,9 +15,10 @@ AmphiProt
 # Flash massages can be integrated some how in the template, can't it? It seem very different if is a error on the form or if it's a flash message
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul class=flashes>
+    <ul class="alert">
+      <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
     {% for message in messages %}
-      <li>{{ message }}</li>
+      <p>{{ message }}</p>
     {% endfor %}
     </ul>
   {% endif %}
