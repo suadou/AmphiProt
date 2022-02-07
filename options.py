@@ -1,5 +1,5 @@
-Options = ["Hydrophobicity&Amphipatic", "IsoelectricPoint", "BLASTP", "Hydrophobicity-Amphipatic and Isoelectric point",
-"Hydrophobicity-Amphipatic and BLASTP", "Hydrophobicity&Amphipatic&Isoelectricpoint&BLASTP"]
+Options = ["Hydrophobicity&Amphipatic", "IsoelectricPoint", "BLASTP", "Hydrophobicity&Amphipatic&IsoelectricPoint",
+"Hydrophobicity&Amphipatic&BLASTP", "Hydrophobicity&Amphipatic&IsoelectricPoint&BLASTP"]
 
 tables = ["Chothia", "Janin", "Tanford", "Wimley", "Eisenberg", "Kyte & Doolittle", "von Heijne-Blomberg", "Wolfenden"]
 
