@@ -168,7 +168,7 @@ def index_post():
             with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                 json.dump(data, fp)
                 fp.close()
-            new_file = Files(impout=True, path="static/data/u_"+current_user.username+"/inputs/"
+            new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
                              + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
             try:
                 db.session.add(new_file)
@@ -209,7 +209,7 @@ def loading(out):
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
         if not current_user.is_anonymous:
-            new_file = Files(impout=False, path="static/data/u_"+current_user.username
+            new_file = Files(impout=False, path="data/u_"+current_user.username
                              + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
 
             try:
@@ -217,7 +217,7 @@ def loading(out):
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
-            new_file = Files(impout=False, path="static/data/u_"+current_user.username
+            new_file = Files(impout=False, path="data/u_"+current_user.username
                              + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
 
             try:
@@ -320,41 +320,6 @@ def logout():
     logout_user()
     flash("You are now logged out", "info")
     return redirect(url_for('index'))
-
-
-#### API stuff
-names_put_args = reqparse.RequestParser()
-names_put_args.add_argument(
-    "username", type=str, help="Please enter a valid username", required=True)
-names_put_args.add_argument(
-    "password", type=str, help="Please enter a valid password", required=True)
-
-
-names = {}
-
-
-class NewUser(Resource):
-    def put(self):
-        args = names_put_args.parse_args()
-        return args
-
-
-api.add_resource(NewUser, "/api_register")
-
-#@app.route('/api_register', methods=['POST'])
-#def register():
-#form = RegistrationForm()
-#    if form.validate_on_submit():
-#        hashed = generate_password_hash(form.password.data, method='sha256')
-#        new_user = User(username=form.username.data,
-#                        password=hashed)
-#        db.session.add(new_user)
-#        db.session.commit()
-#        flash("You have successfully registered!", "info")
-#        return redirect(url_for('index'))
-#    return render_template('register.html', form=form)
-#return jsonify({ 'username': new_user.username }), 201, {'Location': url_for('get_user', id = new_user.id, _external = True)}
-#return {"Status": "Successfully registered"}
 
 
 ########## Functions ##########################################################
