@@ -356,7 +356,7 @@ def read_table(table_int):
 def fourier(sequence, table, user, analysis):
     from matplotlib import pyplot, transforms
     from numpy import convolve, fft, mean, matrix, square
-    hydro = [float(table[aa]) for aa in list(sequence)]
+    hydro = [float(table[aa.upper()]) for aa in list(sequence)]
     km = [1/25] * 25
     Mean = convolve(hydro, km, 'same')
     y = 12
