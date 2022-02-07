@@ -31,10 +31,10 @@ AmphiProt
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">AmphiProt</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
+            <li><a class="navbar-brand" href="#">AmphiProt</a></li>
             <li class="active"><a href="/">Home</a></li>
             {% if not current_user.is_authenticated %}
             <li><a href="{{ url_for('loging') }}">Login</a></li>
@@ -42,9 +42,9 @@ AmphiProt
             {% else %}
               {% set name = current_user.username %}
               <li><a href="{{ url_for('workspace', user_id=name) }}">Workspace</a></li>
-              <li><a href="{{ url_for('logout') }}">Logout</a></li>
+              <li><a href="{{ url_for('logout') }}"><font color="#ff4a4a">Logout</font></a></li>
             {% endif %}
-            <li><a href="{{ url_for('help') }}">Help</a></li>
+            <li ><a href="{{ url_for('help') }}"><font color="#4fff92">Help</font></a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -62,4 +62,10 @@ AmphiProt
       </form>
 
     </div><!-- /.container -->
+
+<footer>
+  <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
+  <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>
+</footer>
+
 {% endblock %}
