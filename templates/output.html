@@ -57,8 +57,30 @@ Dashboard
   </div>
 </nav>
 
-<img src="{{ url_for('.static', filename=list[0]) }}">
+<div class="area">
+  <img src="{{ url_for('.static', filename=list[0]) }}">
+</div>
+<div class="rect">
+  <div class="exclusion-x"></div>
+  <div class="exclusion-y"></div>
+</div>
 <img src="{{ url_for('.static', filename=list[1]) }}">
 
+<script>
+var stage;
+document.addEventListener("DOMContentLoaded", function () {
+stage = new NGL.Stage("viewport");
+var schemeId = NGL.ColormakerRegistry.addSelectionScheme([
+["red", "1-10 or 40-60"],
+["white", "*"]
+], "Transmembrane 1mee");
+
+stage.loadFile("https://data.rcsb.org/rest/v1/core/entry/4HHB/A").then(function (o) {
+  o.addRepresentation("cartoon", {color:schemeId});
+  o.autoView();
+});
+});
+</script>
+<div id="viewport" style="width:800px; height:800px;"></div>
 
 {% endblock %}
