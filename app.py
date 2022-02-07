@@ -118,7 +118,7 @@ class Options(db.Model):
 @app.route('/')
 def index():
     form = Index_post_form()
-    createAnalysisOptions()
+    #createAnalysisOptions()
     return render_template('index.html', form=form)
 
 
