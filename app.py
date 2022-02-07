@@ -381,7 +381,7 @@ def fourier(sequence, table, user, analysis):
     pyplot.contourf(I[0:len(hydro)+12, 0:12])
     pyplot.xticks([25/3.6, 11], ["1/3.6", "1/2"])
     pyplot.grid(color='w', linestyle='-', linewidth=0.75)
-    pyplot.savefig("./static/data/"+user+"/"+analysis+"_Fourier.png")
+    pyplot.savefig("./static/data/"+user+"/"+analysis+"_Fourier.png", transparent=True)
     pyplot.figure(figsize=(3, 7))
     km = [1/15] * 15
     base = pyplot.gca().transData
@@ -389,7 +389,7 @@ def fourier(sequence, table, user, analysis):
     pyplot.plot(convolve(hydro, km, 'same'), 'r', transform=rot + base)
     pyplot.grid(color='b', linestyle='-', linewidth=0.75)
     pyplot.ylim([1, len(I)])
-    pyplot.savefig("./static/data/"+user+"/"+analysis+"_hydroplot.png")
+    pyplot.savefig("./static/data/"+user+"/"+analysis+"_hydroplot.png", transparent=True)
 
 
 def unidown(code):
