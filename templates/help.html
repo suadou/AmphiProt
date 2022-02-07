@@ -21,10 +21,10 @@ Help
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">AmphiProt</a>
     </div>
     <div id="navbar" class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
+        <li><a class="navbar-brand" href="#">AmphiProt</a></li>
         <li><a href="/">Home</a></li>
         {% if not current_user.is_authenticated %}
         <li><a href="{{ url_for('loging') }}">Login</a></li>
@@ -82,4 +82,10 @@ antigenic epitopes for the creation of new promising vaccines as well as inhibit
 
 
      <!-- /container -->
+
+<footer>
+  <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
+  <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>
+</footer>
+
 {% endblock %}
