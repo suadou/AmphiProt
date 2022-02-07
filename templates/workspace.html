@@ -101,7 +101,7 @@ Dashboard
           <td>{{ analysis.id }}</td>
           <td>{{ analysis.Date }}</td>
           {% set x = count|length %}
-          <td> <a href="{{ url_for('.static', filename=list[x][0].path) }}">
+          <td> <a href="{{ url_for('.static', filename=list[x].path) }}">
             Input</a>
              </td>
           <td><a href="{{ url_for('output', analysis_id=analysis.id) }}">
