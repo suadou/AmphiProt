@@ -168,7 +168,7 @@ def index_post():
             with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                 json.dump(data, fp)
                 fp.close()
-            new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+            new_file = Files(impout=True, path="static/data/u_"+current_user.username+"/inputs/"
                              + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
             try:
                 db.session.add(new_file)
@@ -209,7 +209,7 @@ def loading(out):
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
         if not current_user.is_anonymous:
-            new_file = Files(impout=False, path="data/u_"+current_user.username
+            new_file = Files(impout=False, path="static/data/u_"+current_user.username
                              + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
 
             try:
@@ -217,7 +217,7 @@ def loading(out):
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
-            new_file = Files(impout=False, path="data/u_"+current_user.username
+            new_file = Files(impout=False, path="static/data/u_"+current_user.username
                              + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
 
             try:
