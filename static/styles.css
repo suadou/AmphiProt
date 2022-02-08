@@ -136,8 +136,12 @@ footer {
   text-align: center;
 }
 
-/* Imagen de Goku */
+/* Imagenes seleccionables en la output view*/
 
+.column {
+  float:left;
+  padding: 10px;
+}
 
 /* area div */
 .area {
