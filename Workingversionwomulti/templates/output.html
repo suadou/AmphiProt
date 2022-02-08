@@ -38,10 +38,10 @@ Dashboard
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">AmphiProt</a>
     </div>
     <div id="navbar" class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
+        <li><a class="navbar-brand" href="#">AmphiProt</a></li>
         <li><a href="/">Home</a></li>
         {% if not current_user.is_authenticated %}
         <li><a href="{{ url_for('loging') }}">Login</a></li>
@@ -49,16 +49,59 @@ Dashboard
         {% else %}
           {% set name = current_user.username %}
           <li><a href="{{ url_for('workspace', user_id=name) }}">Workspace</a></li>
-          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+          <li><a href="{{ url_for('logout') }}"><font color="#ff4a4a">Logout</font></a></li>
         {% endif %}
-        <li><a href="{{ url_for('help') }}">Help</a></li>
-      </ul>
+        <li ><a href="{{ url_for('help') }}"><font color="#4fff92">Help</font></a></li>      </ul>
     </div><!--/.nav-collapse -->
   </div>
 </nav>
 
-<img src="{{ url_for('.static', filename=list[0]) }}">
-<img src="{{ url_for('.static', filename=list[1]) }}">
+<div class="row">
+	<div class="column">
+		<h2>Amphipathic regions plot</h2>
+		<div class="area">
+		<img src="{{ url_for('.static', filename=list[0]) }}">
+	<div class="rect">
+		<div class="exclusion-x"></div>	
+			<div class="exclusion-y"></div>
+			</div>
+	</div>
+</div>
+	<div class="column">
+	<h2>Hydrophobicity plot</h2>
+	<img src="{{ url_for('.static', filename=list[1]) }}">
+	</div>
 
+<script>
+var stage;
+document.addEventListener("DOMContentLoaded", function () {
+// make the viewport
+stage = new NGL.Stage("viewport");
+stage.loadFile("{{ url_for('.static', filename=list[2]) }}").then(function (o) {
+  o.addRepresentation("cartoon", {color: "cyan", chainid:"A"});
+  o.autoView();
+});
+stage.signals.hovered.add(ngl_hovered);
+});
+
+document.addEventListener('mouseup', e =>{
+  residueMax = Math.round(position.top);
+  residueMin = Math.round(position.bottom);
+  let cartoonRep = stage.getRepresentationsByName("cartoon");
+  let newScheme = NGL.ColormakerRegistry.addSelectionScheme([
+  ["red", residueMin.toString()+'-'+residueMax.toString()+':A'],
+  ["cyan", ":A"],
+  [0X800507FF, "not :A"]
+  ]);
+  cartoonRep.setColor(newScheme);
+  cartoonRep.update({color:true});
+})
+</script>
+<div id="viewport" style="width:600px; height:600px;"></div>
+
+<footer>
+  <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
+  <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>
+</footer>
 
 {% endblock %}
