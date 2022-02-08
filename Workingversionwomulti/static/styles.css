@@ -111,6 +111,18 @@ li.help{
     border-color: #cfffdb;
 }
 
+footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding-top: 1%;
+  padding-bottom: 0.5%;
+  background-color: #242b27;
+  color: white;
+  text-align: center;
+}
+
 /* Imagenes seleccionables en la output view*/
 
 /* area div */
