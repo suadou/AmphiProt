@@ -227,6 +227,8 @@ def loading(out):
 
             except exc.IntegrityError:
                 db.session.rollback()
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
         return redirect(url_for('output', analysis_id=out))
     else:
         error
@@ -307,7 +309,7 @@ def output(analysis_id):
 @login_required
 def workspace(user_id):
     user = User.query.filter_by(username=current_user.username).first()
-    analysis = Analysis.query.filter_by(user_id=user.id)
+    analysis = Analysis.query.filter_by(user_id=user.id).order_by(Analysis.Date.desc())
     list = []
     for x in analysis:
         files = Files.query.filter_by(analyss_id=x.id)
@@ -322,7 +324,11 @@ def logout():
     flash("You are now logged out", "info")
     return redirect(url_for('index'))
 
-
+@app.route('/anonoutput/<analysis_id>')
+def anonoutput(analysis_id):
+    list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
+            f"/data/{analysis_id}/{analysis_id}_hydroplot.png"]
+    return render_template('anonoutput.html', list=list)
 ########## Functions ##########################################################
 
 def check_fasta_input(input):
