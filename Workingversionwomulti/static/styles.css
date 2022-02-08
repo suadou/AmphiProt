@@ -111,16 +111,21 @@ li.help{
     border-color: #cfffdb;
 }
 
-
-
-/* Imagen de Goku */
-
+/* Imagenes seleccionables en la output view*/
 
 /* area div */
+
+.column {
+  float:left;
+  padding-left: 250px;
+  padding-right: 180px;
+}
+
 .area {
   overflow: hidden;
   position: relative;
   margin-bottom: 8px;
+  width: fit-content;
 }
 
 /* area div hover cursor */
