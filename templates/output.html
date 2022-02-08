@@ -49,10 +49,9 @@ Dashboard
         {% else %}
           {% set name = current_user.username %}
           <li><a href="{{ url_for('workspace', user_id=name) }}">Workspace</a></li>
-          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+          <li><a href="{{ url_for('logout') }}"><font color="#ff4a4a">Logout</font></a></li>
         {% endif %}
-        <li class="active"><a href="{{ url_for('help') }}">Help</a></li>
-      </ul>
+        <li ><a href="{{ url_for('help') }}"><font color="#4fff92">Help</font></a></li>      </ul>
     </div><!--/.nav-collapse -->
   </div>
 </nav>
