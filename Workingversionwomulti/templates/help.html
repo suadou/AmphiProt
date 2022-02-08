@@ -32,8 +32,7 @@ Help
         {% else %}
           {% set name = current_user.username %}
           <li><a href="{{ url_for('workspace', user_id=name) }}">Workspace</a></li>
-          <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        {% endif %}
+          <li><a href="{{ url_for('logout') }}"><font color="#ff4a4a">Logout</font></a></li>        {% endif %}
         <li class="active"><a href="{{ url_for('help') }}">Help</a></li>
       </ul>
     </div><!--/.nav-collapse -->
@@ -82,4 +81,10 @@ antigenic epitopes for the creation of new promising vaccines as well as inhibit
 
 
      <!-- /container -->
+
+<footer>
+  <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
+  <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>
+</footer>
+
 {% endblock %}
