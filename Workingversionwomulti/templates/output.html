@@ -77,7 +77,7 @@ var stage;
 document.addEventListener("DOMContentLoaded", function () {
 // make the viewport
 stage = new NGL.Stage("viewport");
-stage.loadFile("{{ url_for('.static', filename=list[2]) }}").then(function (o) {
+stage.loadFile("{{ url_for('.static', filename='1mee.pdb') }}").then(function (o) {
   o.addRepresentation("cartoon", {color: "cyan", chainid:"A"});
   o.autoView();
 });
