@@ -1,0 +1,203 @@
+@charset "UTF-8";
+/*!
+* Start Bootstrap - SB Admin v7.0.4 (https://startbootstrap.com/template/sb-admin)
+* Copyright 2013-2021 Start Bootstrap
+* Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin/blob/master/LICENSE)
+*/
+/*!
+ * Bootstrap v5.1.3 (https://getbootstrap.com/)
+ * Copyright 2011-2021 The Bootstrap Authors
+ * Copyright 2011-2021 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ */
+ /*Section added by us*/
+ 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+body {
+  background-color: #cfffdb;
+  padding-top: 100px;
+  margin-left: 5%;
+  margin-right: 5%;
+  font-family: 'Montserrat', sans-serif;
+  padding-bottom: 200px;
+}
+
+.alert {
+  padding: 20px;
+  background-color: mediumaquamarine;
+  color: black;
+  font-weight: bold;
+  margin-bottom: 15px;
+  margin-left: 10%;
+  margin-right: 50%;
+}
+
+/* The close button */
+.closebtn {
+  margin-left: 15px;
+  color: white;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.closebtn:hover {
+  color: black;
+}
+
+form.form-signin{
+  text-align: center;
+  color: #004d13;
+  margin-left: 30%;
+  margin-right: 30%;
+
+}
+
+form.form{
+  color: #004d13;
+  margin-left: 20%;
+  margin-right: 20%;
+}
+
+h2.form-signin-heading{
+  text-align: center;
+  margin-left: -33.33%;
+  margin-right: -33.33%;
+  margin-bottom: 50px;
+  font-weight: 800;  
+  color: #004d13;  
+
+}
+
+h1.help{
+  text-align: center;
+  color: #004d13;
+  margin-bottom: 50px;
+  
+}
+
+h2.help{
+  color: #004d13;
+  margin-bottom: 20px;
+  margin-top: 30px;
+  
+}
+
+p.help{
+  text-align: justify;
+  color: #004d13;
+  
+}
+
+li.help{
+  text-align: justify;
+  color: #004d13;
+  margin: 10px;
+  
+}
+
+.btn-primary {
+    color: #e8e8e8;
+    background-color: #00a329;
+    border-color: #cfffdb;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+    color: white;
+    background-color: #00bd2f;
+    border-color: #cfffdb;
+}
+
+
+
+/* Imagen de Goku */
+
+
+/* area div */
+.area {
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+/* area div hover cursor */
+.area:hover {
+  cursor: crosshair;
+}
+
+/* img tag in area div */
+.area IMG {
+  display: block;
+  max-width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* rectangle div in area div */
+.area .rect {
+  opacity: 0;
+  transition: all 0s ease;
+  position: absolute;
+  border: 1px solid red;
+  z-index: 1;
+}
+
+/* rectangle div css when in draw or drawn mode */
+.area.draw .rect,
+.area.drawn .rect {
+  opacity: 1;
+}
+
+/* below css is for fun rendering outer exclusion area of drawn rectangle div with a opaque overlay */
+
+/* rectange exclusing pseudo elems base css */
+.area.drawn .rect .exclusion-x::before,
+.area.drawn .rect .exclusion-x::after,
+.area.drawn .rect .exclusion-y::before,
+.area.drawn .rect .exclusion-y::after {
+  position: absolute;
+  content: '';
+  display: block;
+  background: #000;
+  opacity: 0.75;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* rectange outer opaque x above css */
+.area.drawn .rect .exclusion-x::before {
+  bottom: calc(100% + 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  height: 200vh;
+  width: 200vw;
+}
+
+/* rectange outer opaque x below css */
+.area.drawn .rect .exclusion-x::after {
+  top: calc(100% + 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  height: 200vh;
+  width: 200vw;
+}
+
+/* rectange outer opaque y left css */
+.area.drawn .rect .exclusion-y::before {
+  right: calc(100% + 1px);
+  top: -1px;
+  bottom: -1px;
+  width: 200vw;
+}
+
+/* rectange outer opaque y right css */
+.area.drawn .rect .exclusion-y::after {
+  left: calc(100% + 1px);
+  top: -1px;
+  bottom: -1px;
+  width: 200vw;
+}
