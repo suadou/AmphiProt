@@ -58,7 +58,7 @@ class Index_post_form(FlaskForm):
                              Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
-        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijen-Blomberg', 'VonHeijen-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])    
+        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijne-Blomberg', 'VonHeijne-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])    
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
@@ -220,28 +220,29 @@ def loading(out):
     if data["table"]:
         table = read_table(data["table"])
     if "PDB_id" in data:
-        try:
-            analisis_ids = []
-            analisis_ids.append(out)
-            for sequence in parsepdbgen(data["PDB_id"]):
-                fourier(sequence[1], table, data["name"], out)
-            new_file = Files(impout=False, path="data/u_"+current_user.username
+        analisis_ids = []
+        analisis_ids.append(out)
+        for sequence in parsepdbgen(data["PDB_id"]):
+            fourier(sequence[1], table, data["name"], out)
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
+        new_file = Files(impout=False, path="data/u_"+current_user.username
                             + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
 
-            try:
-                db.session.add(new_file)
-                db.session.commit()
-            except exc.IntegrityError:
-                db.session.rollback()
-                new_file = Files(impout=False, path="data/u_"+current_user.username
-                             + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+        try:
+            db.session.add(new_file)
+            db.session.commit()
+        except exc.IntegrityError:
+            db.session.rollback()
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                     + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
 
-            try:
-                 db.session.add(new_file)
-                 db.session.commit()
+        try:
+             db.session.add(new_file)
+             db.session.commit()
 
-            except exc.IntegrityError:
-                 db.session.rollback()
+        except exc.IntegrityError:
+             db.session.rollback()
            #     new_analysis = Analysis(
            #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
            #     try:
@@ -253,34 +254,31 @@ def loading(out):
             #        analisis_ids.append(out)
             #db.session.delete(out)
             #db.session.commiy()
-            if current_user.is_anonymous:
-                    return redirect(url_for('anonoutput', analysis_id=out))
-            return redirect(url_for('output', analysis_id=out))
-        except:
-            error
+        return redirect(url_for('output', analysis_id=out))
     elif "UniProt_id" in data:
-        try:
-            analisis_ids = []
-            analisis_ids.append(out)
-            for sequence in parsepdbgen(data["PDB_id"]):
-                fourier(sequence[1], table, data["name"], out)
-            new_file = Files(impout=False, path="data/u_"+current_user.username
+        analisis_ids = []
+        analisis_ids.append(out)
+        for sequence in parsepdbgen(data["UniProt_id"]):
+            fourier(sequence[1], table, data["name"], out)
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
+        new_file = Files(impout=False, path="data/u_"+current_user.username
                             + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
 
-            try:
-                db.session.add(new_file)
-                db.session.commit()
-            except exc.IntegrityError:
-                db.session.rollback()
-                new_file = Files(impout=False, path="data/u_"+current_user.username
-                             + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+        try:
+            db.session.add(new_file)
+            db.session.commit()
+        except exc.IntegrityError:
+            db.session.rollback()
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                     + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
 
-            try:
-                 db.session.add(new_file)
-                 db.session.commit()
+        try:
+             db.session.add(new_file)
+             db.session.commit()
 
-            except exc.IntegrityError:
-                 db.session.rollback()
+        except exc.IntegrityError:
+             db.session.rollback()
            #     new_analysis = Analysis(
            #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
            #     try:
@@ -292,11 +290,9 @@ def loading(out):
             #        analisis_ids.append(out)
             #db.session.delete(out)
             #db.session.commiy()
-            if current_user.is_anonymous:
-                    return redirect(url_for('anonoutput', analysis_id=out))
-            return redirect(url_for('output', analysis_id=out))
-        except:
-            error
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
+        return redirect(url_for('output', analysis_id=out))
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
         if not current_user.is_anonymous:
@@ -453,7 +449,7 @@ def read_table(table_name):
 def fourier(sequence, table, user, analysis):
     from matplotlib import pyplot, transforms
     from numpy import convolve, fft, mean, matrix, square
-    hydro = [float(table[aa.upper()]) for aa in list(sequence)]
+    hydro = [float(table.setdefault(aa.upper(), 0)) for aa in list(sequence)]
     km = [1/25] * 25
     Mean = convolve(hydro, km, 'same')
     y = 12
