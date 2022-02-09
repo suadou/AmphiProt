@@ -6,6 +6,7 @@ from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField, EmailField
 from wtforms.validators import InputRequired, Length, Regexp, Optional
+from wtforms.widgets import TextArea, ListWidget
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import exc
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -13,12 +14,14 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import os
 import random
 import json
+from flask_restful import Api, Resource, reqparse
 from datetime import datetime
 import requests
 
 abspath = os.path.abspath(os.getcwd())
 
 app = Flask(__name__)
+api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
 Bootstrap(app)
@@ -55,7 +58,7 @@ class Index_post_form(FlaskForm):
                              Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
-        'Table', choices=[(1, 'Eisenberg'), (2, 'Kyte & Doolittle'), (3, 'Chotia'), (4, 'Janin'), (5, 'Tanford'), (6, 'VonHeijen-Blomberg'), (7, 'Wimley'), (8, 'Wolfenden')])
+        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijne-Blomberg', 'VonHeijne-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])    
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
@@ -90,6 +93,7 @@ class Analysis(db.Model):
     Date = db.Column(db.DateTime)
     Error = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
+    #     query_id = db.Column(db.Integer, db.ForeignKey("Query.id"))
     filess = db.relationship('Files', backref='analysis')
     options = db.relationship(
         'Options', secondary=Options_table, backref='analysis')
@@ -100,7 +104,7 @@ class Files(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     impout = db.Column(db.Boolean)
     path = db.Column(db.String(255))
-    queryid = db.Column(db.Integer)
+    queryid = db.Column(db.Integer) # Fuera, estaría solamente linkeado a analysis
     analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
@@ -137,6 +141,25 @@ def index_post():
             if len(data["sequence"][1]) < 50 or len(data["sequence"][1]) > 1000:
                 flash("Sequence must contain 50 to 1000 amino acids", "error")
                 return render_template('index.html', form=form)
+
+
+    #elif form.file.data:
+     #   if form.validate_on_submit():
+      #      f = form.file.meta
+       #     return f
+        #    filename = secure_filename(f)
+        #    f.save(os.path.join(
+         #   app.instance_path, 'file', filename
+         #    ))
+       # alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+        #data['file']=[app.instance_path, 'file', filename]
+        #return data['file']
+           # for protein in parsedmulti(sequence):
+            #    if alphabets.search(protein) is not None:
+             #       data['file'].append(protein)
+        #return data['file']
+
+
     else:
         return redirect(url_for('index'))
     data["table"] = form.table.data
@@ -152,9 +175,16 @@ def index_post():
                 fp.close()
                 return redirect(url_for('loading', out=data["name"]))
         else:
+            #new_query = Query( Date = datetime.now(), Error = None)
+            #try:
+            #    db.session.add(new_query)
+            #    db.session.commit()
+            #except exc.IntegrityError:
+             #   db.session.rollback()
+             #   return render_template('loading.html', form=form)   
             data["name"] = current_user.username
             new_analysis = Analysis(
-                Date=datetime.now(), Error=None, user_id=current_user.get_id())
+                Date=datetime.now(), Error=None, user_id=current_user.get_id()) # añadir quieri_id = new_query.id
             try:
                 db.session.add(new_analysis)
                 db.session.commit()
@@ -177,7 +207,6 @@ def index_post():
             return redirect(url_for('loading', out=new_analysis.id))
     return render_template('index.html', form=form)
 
-
 @app.route('/loading/<out>', methods=['GET', 'POST'])
 def loading(out):
     if current_user.is_anonymous:
@@ -189,21 +218,81 @@ def loading(out):
         data = json.load(f)
         data["name"] = "u_"+data["name"]+"/outputs"
     if data["table"]:
-        table = read_table("Eisenberg")
+        table = read_table(data["table"])
     if "PDB_id" in data:
+        analisis_ids = []
+        analisis_ids.append(out)
+        for sequence in parsepdbgen(data["PDB_id"]):
+            fourier(sequence[1], table, data["name"], out)
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                            + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
+
         try:
-            for sequence in parsepdbgen(data["PDB_id"]):
-                fourier(sequence[1], table, data["name"], out)
-            return "Done"
-        except:
-            error
+            db.session.add(new_file)
+            db.session.commit()
+        except exc.IntegrityError:
+            db.session.rollback()
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                     + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+
+        try:
+             db.session.add(new_file)
+             db.session.commit()
+
+        except exc.IntegrityError:
+             db.session.rollback()
+           #     new_analysis = Analysis(
+           #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
+           #     try:
+          #          db.session.add(new_analysis)
+         #           db.session.commit()
+             #   except exc.IntegrityError:
+             #       db.session.rollback()
+            #        out = new_analysis.id
+            #        analisis_ids.append(out)
+            #db.session.delete(out)
+            #db.session.commiy()
+        return redirect(url_for('output', analysis_id=out))
     elif "UniProt_id" in data:
+        analisis_ids = []
+        analisis_ids.append(out)
+        for sequence in parsepdbgen(data["UniProt_id"]):
+            fourier(sequence[1], table, data["name"], out)
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                            + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
+
         try:
-            for sequence in parseunicode(data["UniProt_id"]):
-                fourier(sequence[1], table, data["name"], out)
-            return "done"
-        except:
-            error
+            db.session.add(new_file)
+            db.session.commit()
+        except exc.IntegrityError:
+            db.session.rollback()
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                     + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+
+        try:
+             db.session.add(new_file)
+             db.session.commit()
+
+        except exc.IntegrityError:
+             db.session.rollback()
+           #     new_analysis = Analysis(
+           #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
+           #     try:
+          #          db.session.add(new_analysis)
+         #           db.session.commit()
+             #   except exc.IntegrityError:
+             #       db.session.rollback()
+            #        out = new_analysis.id
+            #        analisis_ids.append(out)
+            #db.session.delete(out)
+            #db.session.commiy()
+        if current_user.is_anonymous:
+            return redirect(url_for('anonoutput', analysis_id=out))
+        return redirect(url_for('output', analysis_id=out))
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
         if not current_user.is_anonymous:
@@ -302,19 +391,11 @@ def output(analysis_id):
     return render_template('output.html', list=list)
 
 
-@app.route('/anonoutput/<analysis_id>')
-def anonoutput(analysis_id):
-    list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
-            f"/data/{analysis_id}/{analysis_id}_hydroplot.png"]
-    return render_template('anonoutput.html', list=list)
-
-
 @app.route('/workspace/<user_id>')
 @login_required
 def workspace(user_id):
     user = User.query.filter_by(username=current_user.username).first()
-    analysis = Analysis.query.filter_by(
-        user_id=user.id).order_by(Analysis.Date.desc())
+    analysis = Analysis.query.filter_by(user_id=user.id).order_by(Analysis.Date.desc())
     list = []
     for x in analysis:
         files = Files.query.filter_by(analyss_id=x.id)
@@ -329,7 +410,11 @@ def logout():
     flash("You are now logged out", "info")
     return redirect(url_for('index'))
 
-
+@app.route('/anonoutput/<analysis_id>')
+def anonoutput(analysis_id):
+    list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
+            f"/data/{analysis_id}/{analysis_id}_hydroplot.png"]
+    return render_template('anonoutput.html', list=list)
 ########## Functions ##########################################################
 
 def check_fasta_input(input):
@@ -351,9 +436,9 @@ def check_fasta_input(input):
         return False
 
 
-def read_table(table_int):
+def read_table(table_name):
     table = {}
-    fd = open("./tables/"+table_int, 'r')
+    fd = open("./tables/"+table_name, 'r')
     for line in fd:
         line = line.strip()
         (key, val) = line.split(" ")
@@ -364,7 +449,7 @@ def read_table(table_int):
 def fourier(sequence, table, user, analysis):
     from matplotlib import pyplot, transforms
     from numpy import convolve, fft, mean, matrix, square
-    hydro = [float(table[aa.upper()]) for aa in list(sequence)]
+    hydro = [float(table.setdefault(aa.upper(), 0)) for aa in list(sequence)]
     km = [1/25] * 25
     Mean = convolve(hydro, km, 'same')
     y = 12
@@ -389,7 +474,7 @@ def fourier(sequence, table, user, analysis):
     pyplot.contourf(I[0:len(hydro)+12, 0:12])
     pyplot.xticks([25/3.6, 11], ["1/3.6", "1/2"])
     pyplot.grid(color='w', linestyle='-', linewidth=0.75)
-    pyplot.savefig("./static/data/"+user+"/"+analysis+"_Fourier.png")
+    pyplot.savefig("./static/data/"+user+"/"+analysis+"_Fourier.png", transparent=True)
     pyplot.figure(figsize=(3, 7))
     km = [1/15] * 15
     base = pyplot.gca().transData
@@ -397,7 +482,7 @@ def fourier(sequence, table, user, analysis):
     pyplot.plot(convolve(hydro, km, 'same'), 'r', transform=rot + base)
     pyplot.grid(color='b', linestyle='-', linewidth=0.75)
     pyplot.ylim([1, len(I)])
-    pyplot.savefig("./static/data/"+user+"/"+analysis+"_hydroplot.png")
+    pyplot.savefig("./static/data/"+user+"/"+analysis+"_hydroplot.png", transparent=True)
 
 
 def unidown(code):
@@ -485,7 +570,6 @@ def createAnalysisOptions():
                 db.session.rollback()
             finally:
                 db.session.close()
-
     
 # I left this at the end bc I am not sure if it has to be there?
 if __name__ == '__main__':
