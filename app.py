@@ -58,7 +58,7 @@ class Index_post_form(FlaskForm):
                              Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
-        'Table', choices=[(1, 'Eisenberg'), (2, 'Kyte & Doolittle'), (3, 'Chotia'), (4, 'Janin'), (5, 'Tanford'), (6, 'VonHeijen-Blomberg'), (7, 'Wimley'), (8, 'Wolfenden')])
+        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijen-Blomberg', 'VonHeijen-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])    
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
@@ -93,6 +93,7 @@ class Analysis(db.Model):
     Date = db.Column(db.DateTime)
     Error = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
+    #     query_id = db.Column(db.Integer, db.ForeignKey("Query.id"))
     filess = db.relationship('Files', backref='analysis')
     options = db.relationship(
         'Options', secondary=Options_table, backref='analysis')
@@ -103,7 +104,7 @@ class Files(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     impout = db.Column(db.Boolean)
     path = db.Column(db.String(255))
-    queryid = db.Column(db.Integer)
+    queryid = db.Column(db.Integer) # Fuera, estaría solamente linkeado a analysis
     analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
@@ -140,6 +141,25 @@ def index_post():
             if len(data["sequence"][1]) < 50 or len(data["sequence"][1]) > 1000:
                 flash("Sequence must contain 50 to 1000 amino acids", "error")
                 return render_template('index.html', form=form)
+
+
+    #elif form.file.data:
+     #   if form.validate_on_submit():
+      #      f = form.file.meta
+       #     return f
+        #    filename = secure_filename(f)
+        #    f.save(os.path.join(
+         #   app.instance_path, 'file', filename
+         #    ))
+       # alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+        #data['file']=[app.instance_path, 'file', filename]
+        #return data['file']
+           # for protein in parsedmulti(sequence):
+            #    if alphabets.search(protein) is not None:
+             #       data['file'].append(protein)
+        #return data['file']
+
+
     else:
         return redirect(url_for('index'))
     data["table"] = form.table.data
@@ -155,9 +175,16 @@ def index_post():
                 fp.close()
                 return redirect(url_for('loading', out=data["name"]))
         else:
+            #new_query = Query( Date = datetime.now(), Error = None)
+            #try:
+            #    db.session.add(new_query)
+            #    db.session.commit()
+            #except exc.IntegrityError:
+             #   db.session.rollback()
+             #   return render_template('loading.html', form=form)   
             data["name"] = current_user.username
             new_analysis = Analysis(
-                Date=datetime.now(), Error=None, user_id=current_user.get_id())
+                Date=datetime.now(), Error=None, user_id=current_user.get_id()) # añadir quieri_id = new_query.id
             try:
                 db.session.add(new_analysis)
                 db.session.commit()
@@ -180,7 +207,6 @@ def index_post():
             return redirect(url_for('loading', out=new_analysis.id))
     return render_template('index.html', form=form)
 
-
 @app.route('/loading/<out>', methods=['GET', 'POST'])
 def loading(out):
     if current_user.is_anonymous:
@@ -192,19 +218,83 @@ def loading(out):
         data = json.load(f)
         data["name"] = "u_"+data["name"]+"/outputs"
     if data["table"]:
-        table = read_table("Eisenberg")
+        table = read_table(data["table"])
     if "PDB_id" in data:
         try:
+            analisis_ids = []
+            analisis_ids.append(out)
             for sequence in parsepdbgen(data["PDB_id"]):
                 fourier(sequence[1], table, data["name"], out)
-            return "Done"
+            new_file = Files(impout=False, path="data/u_"+current_user.username
+                            + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
+
+            try:
+                db.session.add(new_file)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()
+                new_file = Files(impout=False, path="data/u_"+current_user.username
+                             + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+
+            try:
+                 db.session.add(new_file)
+                 db.session.commit()
+
+            except exc.IntegrityError:
+                 db.session.rollback()
+           #     new_analysis = Analysis(
+           #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
+           #     try:
+          #          db.session.add(new_analysis)
+         #           db.session.commit()
+             #   except exc.IntegrityError:
+             #       db.session.rollback()
+            #        out = new_analysis.id
+            #        analisis_ids.append(out)
+            #db.session.delete(out)
+            #db.session.commiy()
+            if current_user.is_anonymous:
+                    return redirect(url_for('anonoutput', analysis_id=out))
+            return redirect(url_for('output', analysis_id=out))
         except:
             error
     elif "UniProt_id" in data:
         try:
-            for sequence in parseunicode(data["UniProt_id"]):
+            analisis_ids = []
+            analisis_ids.append(out)
+            for sequence in parsepdbgen(data["PDB_id"]):
                 fourier(sequence[1], table, data["name"], out)
-            return "done"
+            new_file = Files(impout=False, path="data/u_"+current_user.username
+                            + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
+
+            try:
+                db.session.add(new_file)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()
+                new_file = Files(impout=False, path="data/u_"+current_user.username
+                             + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
+
+            try:
+                 db.session.add(new_file)
+                 db.session.commit()
+
+            except exc.IntegrityError:
+                 db.session.rollback()
+           #     new_analysis = Analysis(
+           #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
+           #     try:
+          #          db.session.add(new_analysis)
+         #           db.session.commit()
+             #   except exc.IntegrityError:
+             #       db.session.rollback()
+            #        out = new_analysis.id
+            #        analisis_ids.append(out)
+            #db.session.delete(out)
+            #db.session.commiy()
+            if current_user.is_anonymous:
+                    return redirect(url_for('anonoutput', analysis_id=out))
+            return redirect(url_for('output', analysis_id=out))
         except:
             error
     elif "sequence" in data:
@@ -350,9 +440,9 @@ def check_fasta_input(input):
         return False
 
 
-def read_table(table_int):
+def read_table(table_name):
     table = {}
-    fd = open("./tables/"+table_int, 'r')
+    fd = open("./tables/"+table_name, 'r')
     for line in fd:
         line = line.strip()
         (key, val) = line.split(" ")
