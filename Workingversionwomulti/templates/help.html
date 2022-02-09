@@ -24,6 +24,7 @@ Help
     </div>
     <div id="navbar" class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
+        <li><a class="navbar-brand" href="#">AmphiProt</a></li>
         <li><a href="/">Home</a></li>
         {% if not current_user.is_authenticated %}
         <li><a href="{{ url_for('loging') }}">Login</a></li>
