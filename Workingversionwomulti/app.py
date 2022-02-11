@@ -23,7 +23,7 @@ abspath = os.path.abspath(os.getcwd())
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:jXuu230@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -58,7 +58,7 @@ class Index_post_form(FlaskForm):
                              Optional(), Length(min=50, max=1000)])
     file = FileField()
     table = SelectField(
-        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijne-Blomberg', 'VonHeijne-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])    
+        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijne-Blomberg', 'VonHeijne-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
@@ -119,7 +119,7 @@ class Options(db.Model):
 @app.route('/')
 def index():
     form = Index_post_form()
-    #createAnalysisOptions()
+    createAnalysisOptions()
     return render_template('index.html', form=form)
 
 
@@ -181,7 +181,7 @@ def index_post():
             #    db.session.commit()
             #except exc.IntegrityError:
              #   db.session.rollback()
-             #   return render_template('loading.html', form=form)   
+             #   return render_template('loading.html', form=form)
             data["name"] = current_user.username
             new_analysis = Analysis(
                 Date=datetime.now(), Error=None, user_id=current_user.get_id()) # añadir quieri_id = new_query.id
@@ -496,6 +496,13 @@ def pdbdown(code):
     r = requests.get(url, allow_redirects=True).content.decode("utf-8")
     return r
 
+def pdbstructdown(code):
+    url = "https://files.rcsb.org/download/" + code.upper() + ".pdb"
+    r = requests.get(url, allow_redirects=True).content.decode("utf-8")
+    PDBfile = open("static/"+code+".pdb", 'wt')
+    for line in r:
+        PDBfile.write(line)
+    PDBFile.close()
 
 def parsepdbgen(code):
     actual_protein = None
@@ -570,7 +577,7 @@ def createAnalysisOptions():
                 db.session.rollback()
             finally:
                 db.session.close()
-    
+
 # I left this at the end bc I am not sure if it has to be there?
 if __name__ == '__main__':
     app.run(debug=True)
