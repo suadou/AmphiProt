@@ -62,7 +62,7 @@ Dashboard
 		<div class="area">
 		<img src="{{ url_for('.static', filename=list[0]) }}">
 	<div class="rect">
-		<div class="exclusion-x"></div>	
+		<div class="exclusion-x"></div>
 			<div class="exclusion-y"></div>
 			</div>
 	</div>
@@ -77,21 +77,42 @@ var stage;
 document.addEventListener("DOMContentLoaded", function () {
 // make the viewport
 stage = new NGL.Stage("viewport");
-stage.loadFile("{{ url_for('.static', filename='1mee.pdb') }}").then(function (o) {
+stage.loadFile("{{ url_for('.static', filename=list[2]) }}").then(function (o) {
   o.addRepresentation("cartoon", {color: "cyan", chainid:"A"});
   o.autoView();
 });
 stage.signals.hovered.add(ngl_hovered);
 });
 
+//$(document).ready(function(){
+    //$.getJSON("{{ url_for('.static', filename=list[3]) }}", function(data){
+
+//    }).fail(function(){
+  //      console.log("An error has occurred.");
+//    });
+//});
+
+//PDBdata = fetch("{{ url_for('.static', filename=list[3]) }}");
+//chainLen = PDBdata[1][1];
+//});
+
+chainLen = {{ list[3] }};
+
 document.addEventListener('mouseup', e =>{
-  residueMax = Math.round(position.top);
-  residueMin = Math.round(position.bottom);
+  residueMax = Math.round((100-position.top)*chainLen/100);
+  residueMin = Math.round(position.bottom*chainLen/100);
+  if (residueMin > residueMax) {
+    residueMin = Math.round((100-position.top)*chainLen/100);
+    residueMax = Math.round(position.bottom*chainLen/100);
+  }
+  residueMax = residueMax.toString();
+  residueMin = residueMin.toString();
+  dash = "-";
+  residues = residueMin.concat(dash.concat(residueMax));
   let cartoonRep = stage.getRepresentationsByName("cartoon");
   let newScheme = NGL.ColormakerRegistry.addSelectionScheme([
-  ["red", residueMin.toString()+'-'+residueMax.toString()+':A'],
-  ["cyan", ":A"],
-  [0X800507FF, "not :A"]
+  ["red", residues],
+  ["cyan", "*"],
   ]);
   cartoonRep.setColor(newScheme);
   cartoonRep.update({color:true});
@@ -101,6 +122,7 @@ document.addEventListener('mouseup', e =>{
 <div id="viewport" style="width:600px; height:600px;"></div>
 </div>
 </div>
+<p><script>document.write(residues)</script></p>
 <footer>
   <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
   <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>

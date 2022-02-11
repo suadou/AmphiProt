@@ -17,6 +17,7 @@ import json
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
 import requests
+from Bio import PDB
 
 abspath = os.path.abspath(os.getcwd())
 
@@ -212,6 +213,7 @@ def loading(out):
     if current_user.is_anonymous:
         f = open("static/data/"+out+"/"+out+"_input.json")
         data = json.load(f)
+        print(data)
     else:
         f = open("static/data/u_"+current_user.username
                  + "/inputs/"+str(out)+"_input.json")
@@ -222,6 +224,10 @@ def loading(out):
     if "PDB_id" in data:
         analisis_ids = []
         analisis_ids.append(out)
+        for id in data["PDB_id"]:
+            chainsData = pdbstructdown(data["PDB_id"], out)
+            with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
+                json.dump(chainsData, PDBjson)
         for sequence in parsepdbgen(data["PDB_id"]):
             fourier(sequence[1], table, data["name"], out)
         if current_user.is_anonymous:
@@ -388,6 +394,7 @@ def output(analysis_id):
         return redirect(url_for('index'))
     files = Files.query.filter_by(analyss_id=analysis_id)
     list = [str(files[1].path), str(files[2].path)]
+    list.append(data["PDB_id"]+".pdb")
     return render_template('output.html', list=list)
 
 
@@ -412,8 +419,16 @@ def logout():
 
 @app.route('/anonoutput/<analysis_id>')
 def anonoutput(analysis_id):
+    f = open(f"static/data/{analysis_id}/{analysis_id}.json")
+    PDBdata = json.load(f)
+    lastchain = len(PDBdata)
+    lastchainLen = PDBdata[-1][1]
+    #lastchainLen = PDBdata[str(len(PDBdata.keys()))][1]
     list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
-            f"/data/{analysis_id}/{analysis_id}_hydroplot.png"]
+            f"/data/{analysis_id}/{analysis_id}_hydroplot.png",
+            f"data/{analysis_id}/{analysis_id}_{lastchain}.pdb",
+            #f"data/{analysis_id}/{analysis_id}.json",
+            lastchainLen]
     return render_template('anonoutput.html', list=list)
 ########## Functions ##########################################################
 
@@ -496,13 +511,33 @@ def pdbdown(code):
     r = requests.get(url, allow_redirects=True).content.decode("utf-8")
     return r
 
-def pdbstructdown(code):
+def pdbstructdown(code, out):
     url = "https://files.rcsb.org/download/" + code.upper() + ".pdb"
     r = requests.get(url, allow_redirects=True).content.decode("utf-8")
-    PDBfile = open("static/"+code+".pdb", 'wt')
+    PDBfile = open("static/data/"+out+"/"+out+".pdb", 'wt')
     for line in r:
         PDBfile.write(line)
-    PDBFile.close()
+    PDBfile.close()
+    parser=PDB.PDBParser()
+    io=PDB.PDBIO()
+    structure = parser.get_structure(out, "static/data/"+out+"/"+out+".pdb")
+    chainnum = 0
+    chainsData = []
+    for chain in structure.get_chains():
+        chainnum += 1
+        io.set_structure(chain)
+        io.save("static/data/"+out+"/"+out+"_"+str(chainnum)+".pdb")
+
+        with open("static/data/"+out+"/"+out+"_"+str(chainnum)+".pdb", 'r') as currentChain:
+            chainLen = 0
+            for line in currentChain:
+                line_elements = line.split()
+                if line_elements[0]=="ATOM" and line_elements[2] == "CA":
+                    chainLen += 1
+                    chainID = line_elements[4]
+            chainsData.append([chainID, chainLen])
+
+    return chainsData
 
 def parsepdbgen(code):
     actual_protein = None
