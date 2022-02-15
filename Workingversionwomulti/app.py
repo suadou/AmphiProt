@@ -389,6 +389,21 @@ def loading(out):
         
         if current_user.is_anonymous:
             return redirect(url_for('anonoutput', analysis_id=out))
+        
+        if "isoelectric" in data:
+        	IP = isoelectric_p(data["sequence"][1], data["name"], out)
+        	if not current_user.is_anonymous:
+        	    new_file = Files(impout=False, path="data/u_"+current_user.username
+        	                     + "/outputs/"+str(out)+"_isoelectric.txt",  analyss_id=out)
+	
+        	    try:
+        	        db.session.add(new_file)
+        	        db.session.commit()
+        	    except exc.IntegrityError:
+        	        db.session.rollback()
+	
+        	if current_user.is_anonymous:
+        	    return redirect(url_for('anonoutput', analysis_id=out))
         return redirect(url_for('output', analysis_id=out))
     else:
         error
@@ -498,6 +513,7 @@ def anonoutput(analysis_id):
     list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
             f"/data/{analysis_id}/{analysis_id}_hydroplot.png",
             f"data/{analysis_id}/{analysis_id}_{lastchain}.pdb",
+            f"./data/{analysis_id}/{analysis_id}_isoelectric.txt",
             #f"data/{analysis_id}/{analysis_id}.json",
             lastchainLen]
     return render_template('anonoutput.html', list=list)
@@ -684,6 +700,12 @@ def createAnalysisOptions():
             finally:
                 db.session.close()
 
+def isoelectric_p(sequence, user, analysis):
+    from isoelectric import ipc
+    isoelectric_point = ipc.predict_isoelectric_point_ProMoST(sequence)
+    with open("./static/data/"+user+"/"+analysis+"_isoelectric.txt", 'w') as f:
+        f.write('%f' % isoelectric_point)
+                
 # I left this at the end bc I am not sure if it has to be there?
 if __name__ == '__main__':
     app.run(debug=True)
