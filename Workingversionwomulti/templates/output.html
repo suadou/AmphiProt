@@ -62,7 +62,7 @@ Dashboard
 		<div class="area">
 		<img src="{{ url_for('.static', filename=list[0]) }}">
 	<div class="rect">
-		<div class="exclusion-x"></div>	
+		<div class="exclusion-x"></div>
 			<div class="exclusion-y"></div>
 			</div>
 	</div>
@@ -73,29 +73,38 @@ Dashboard
 	</div>
 
 <script>
-var stage;
-document.addEventListener("DOMContentLoaded", function () {
-// make the viewport
-stage = new NGL.Stage("viewport");
-stage.loadFile("{{ url_for('.static', filename='1mee.pdb') }}").then(function (o) {
-  o.addRepresentation("cartoon", {color: "cyan", chainid:"A"});
-  o.autoView();
-});
-stage.signals.hovered.add(ngl_hovered);
-});
+  var stage;
+  document.addEventListener("DOMContentLoaded", function () {
+  // make the viewport
+  stage = new NGL.Stage("viewport");
+  stage.loadFile("{{ url_for('.static', filename=list[2]) }}").then(function (o) {
+    o.addRepresentation("cartoon", {color: "cyan", chainid:"A"});
+    o.autoView();
+  });
+  stage.signals.hovered.add(ngl_hovered);
+  });
 
-document.addEventListener('mouseup', e =>{
-  residueMax = Math.round(position.top);
-  residueMin = Math.round(position.bottom);
-  let cartoonRep = stage.getRepresentationsByName("cartoon");
-  let newScheme = NGL.ColormakerRegistry.addSelectionScheme([
-  ["red", residueMin.toString()+'-'+residueMax.toString()+':A'],
-  ["cyan", ":A"],
-  [0X800507FF, "not :A"]
-  ]);
-  cartoonRep.setColor(newScheme);
-  cartoonRep.update({color:true});
-})
+  chainLen = {{ list[3] }};
+
+  document.addEventListener('mouseup', e =>{
+    residueMax = Math.round((100-position.top)*chainLen/100);
+    residueMin = Math.round(position.bottom*chainLen/100);
+    if (residueMin > residueMax) {
+      residueMin = Math.round((100-position.top)*chainLen/100);
+      residueMax = Math.round(position.bottom*chainLen/100);
+    }
+    residueMax = residueMax.toString();
+    residueMin = residueMin.toString();
+    dash = "-";
+    residues = residueMin.concat(dash.concat(residueMax));
+    let cartoonRep = stage.getRepresentationsByName("cartoon");
+    let newScheme = NGL.ColormakerRegistry.addSelectionScheme([
+    ["red", residues],
+    ["cyan", "*"],
+    ]);
+    cartoonRep.setColor(newScheme);
+    cartoonRep.update({color:true});
+  })
 </script>
 <div class="column">
 <div id="viewport" style="width:600px; height:600px;"></div>

@@ -18,6 +18,7 @@ from flask_restful import Api, Resource, reqparse
 from datetime import datetime
 import requests
 from Bio import PDB
+import prody
 
 abspath = os.path.abspath(os.getcwd())
 
@@ -225,9 +226,14 @@ def loading(out):
         analisis_ids = []
         analisis_ids.append(out)
         for id in data["PDB_id"]:
-            chainsData = pdbstructdown(data["PDB_id"], out)
-            with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
-                json.dump(chainsData, PDBjson)
+            if current_user.is_anonymous:
+                chainsData = pdbstructdown(data["PDB_id"], out+"/"+out)
+                with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
+                    json.dump(chainsData, PDBjson)
+            else:
+                chainsData = pdbstructdown(data["PDB_id"], "u_"+current_user.username+"/outputs/"+out+"_PDB")
+                with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
+                    json.dump(chainsData, PDBjson)
         for sequence in parsepdbgen(data["PDB_id"]):
             fourier(sequence[1], table, data["name"], out)
         if current_user.is_anonymous:
@@ -249,6 +255,21 @@ def loading(out):
 
         except exc.IntegrityError:
              db.session.rollback()
+
+        f = open(f"static/data/u_"+current_user.username+"/outputs/"+out+".json")
+        PDBdata = json.load(f)
+        lastchain = len(PDBdata)
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                      + "/outputs/"+out+"_PDB_"+str(lastchain)+".pdb", analyss_id=out)
+        try:
+            db.session.add(new_file)
+            db.session.commit()
+
+        except exc.IntegrityError:
+            db.session.rollback()
+
+        #new_file = Files(impout=False, path="data/u_"+current_user.username
+        #             + "/outputs/"+str(out)+"_PDBHit.pdb")
            #     new_analysis = Analysis(
            #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
            #     try:
@@ -264,8 +285,20 @@ def loading(out):
     elif "UniProt_id" in data:
         analisis_ids = []
         analisis_ids.append(out)
-        for sequence in parsepdbgen(data["UniProt_id"]):
+        for sequence in parseunicode(data["UniProt_id"]):
             fourier(sequence[1], table, data["name"], out)
+            blast_record = prody.blastPDB(sequence[1])
+            best_hit = blast_record.getBest()
+            #with open("tempfile.json", 'w') as testjson:
+            #    json.dump(best_hit, testjson)
+            if current_user.is_anonymous:
+                chainsData = pdbstructdown(best_hit['pdb_id'], out+"/"+out)
+                with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
+                    json.dump(chainsData, PDBjson)
+            else:
+                chainsData = pdbstructdown(best_hit['pdb_id'], "u_"+current_user.username+"/outputs/"+out+"_PDB")
+                with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
+                    json.dump(chainsData, PDBjson)
         if current_user.is_anonymous:
             return redirect(url_for('anonoutput', analysis_id=out))
         new_file = Files(impout=False, path="data/u_"+current_user.username
@@ -285,6 +318,18 @@ def loading(out):
 
         except exc.IntegrityError:
              db.session.rollback()
+
+        f = open(f"static/data/u_"+current_user.username+"/outputs/"+out+".json")
+        PDBdata = json.load(f)
+        lastchain = len(PDBdata)
+        new_file = Files(impout=False, path="data/u_"+current_user.username
+                      + "/outputs/"+out+"_PDB_"+str(lastchain)+".pdb", analyss_id=out)
+        try:
+            db.session.add(new_file)
+            db.session.commit()
+
+        except exc.IntegrityError:
+            db.session.rollback()
            #     new_analysis = Analysis(
            #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
            #     try:
@@ -301,6 +346,16 @@ def loading(out):
         return redirect(url_for('output', analysis_id=out))
     elif "sequence" in data:
         fourier(data["sequence"][1], table, data["name"], out)
+        blast_record = prody.blastPDB(data["sequence"][1])
+        best_hit = blast_record.getBest()
+        if current_user.is_anonymous:
+            chainsData = pdbstructdown(best_hit['pdb_id'], out+"/"+out)
+            with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
+                json.dump(chainsData, PDBjson)
+        else:
+            chainsData = pdbstructdown(best_hit['pdb_id'], "u_"+current_user.username+"/outputs/"+out+"_PDB")
+            with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
+                json.dump(chainsData, PDBjson)
         if not current_user.is_anonymous:
             new_file = Files(impout=False, path="data/u_"+current_user.username
                              + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
@@ -319,6 +374,19 @@ def loading(out):
 
             except exc.IntegrityError:
                 db.session.rollback()
+
+            f = open(f"static/data/u_"+current_user.username+"/outputs/"+out+".json")
+            PDBdata = json.load(f)
+            lastchain = len(PDBdata)
+            new_file = Files(impout=False, path="data/u_"+current_user.username
+                          + "/outputs/"+out+"_PDB_"+str(lastchain)+".pdb", analyss_id=out)
+            try:
+                db.session.add(new_file)
+                db.session.commit()
+
+            except exc.IntegrityError:
+                db.session.rollback()
+        
         if current_user.is_anonymous:
             return redirect(url_for('anonoutput', analysis_id=out))
         return redirect(url_for('output', analysis_id=out))
@@ -392,9 +460,12 @@ def output(analysis_id):
     if analysis.user_id != user.id:
         flash("You are not authorized here.", "error")
         return redirect(url_for('index'))
+    f = open(f"static/data/u_"+current_user.username+"/outputs/"+analysis_id+".json")
+    PDBdata = json.load(f)
+    lastchainLen = PDBdata[-1][1]
     files = Files.query.filter_by(analyss_id=analysis_id)
-    list = [str(files[1].path), str(files[2].path)]
-    list.append(data["PDB_id"]+".pdb")
+    list = [str(files[1].path), str(files[2].path), str(files[3].path), lastchainLen]
+    #list.append(data["PDB_id"]+".pdb")
     return render_template('output.html', list=list)
 
 
@@ -514,21 +585,21 @@ def pdbdown(code):
 def pdbstructdown(code, out):
     url = "https://files.rcsb.org/download/" + code.upper() + ".pdb"
     r = requests.get(url, allow_redirects=True).content.decode("utf-8")
-    PDBfile = open("static/data/"+out+"/"+out+".pdb", 'wt')
+    PDBfile = open("static/data/"+out+".pdb", 'wt')
     for line in r:
         PDBfile.write(line)
     PDBfile.close()
     parser=PDB.PDBParser()
     io=PDB.PDBIO()
-    structure = parser.get_structure(out, "static/data/"+out+"/"+out+".pdb")
+    structure = parser.get_structure(out, "static/data/"+out+".pdb")
     chainnum = 0
     chainsData = []
     for chain in structure.get_chains():
         chainnum += 1
         io.set_structure(chain)
-        io.save("static/data/"+out+"/"+out+"_"+str(chainnum)+".pdb")
+        io.save("static/data/"+out+"_"+str(chainnum)+".pdb")
 
-        with open("static/data/"+out+"/"+out+"_"+str(chainnum)+".pdb", 'r') as currentChain:
+        with open("static/data/"+out+"_"+str(chainnum)+".pdb", 'r') as currentChain:
             chainLen = 0
             for line in currentChain:
                 line_elements = line.split()
