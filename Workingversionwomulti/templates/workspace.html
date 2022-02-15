@@ -71,7 +71,9 @@ Dashboard
   <table id="data" class="table table-striped">
     <thead>
       <tr>
-        <th>Analysis_Id</th>
+        <th>Query ID</th>
+        <th>Sequence identifier</th>
+	<th>Analysis_Id</th>
         <th>Date</th>
         <th>Input</th>
         <th>Outputs</th>
@@ -84,7 +86,9 @@ Dashboard
       {% for analysis in analysiss %}
 
         <tr>
-          <td>{{ analysis.id }}</td>
+          <td>{{ analysis.query_id }}</td>
+          <td>{{ analysis.protein_name }}</td>
+	  <td>{{ analysis.id }}</td>
           <td>{{ analysis.Date }}</td>
           {% set x = count|length %}
           <td> <a href="{{ url_for('.static', filename=list[x][0].path) }}">
