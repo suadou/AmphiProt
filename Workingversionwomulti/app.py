@@ -513,9 +513,8 @@ def anonoutput(analysis_id):
     list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
             f"/data/{analysis_id}/{analysis_id}_hydroplot.png",
             f"data/{analysis_id}/{analysis_id}_{lastchain}.pdb",
-            f"./data/{analysis_id}/{analysis_id}_isoelectric.txt",
-            #f"data/{analysis_id}/{analysis_id}.json",
-            lastchainLen]
+            lastchainLen,
+	    f"./data/{analysis_id}/{analysis_id}_isoelectric.txt"]
     return render_template('anonoutput.html', list=list)
 ########## Functions ##########################################################
 
