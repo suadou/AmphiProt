@@ -49,7 +49,7 @@ AmphiProt
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-      <form class="form" method=POST>
+      <form class="form" method=POST enctype="multipart/form-data">
           {{ form.hidden_tag() }}
           {{ wtf.form_field(form.PDB_id) }}
           {{ wtf.form_field(form.UniProt_id) }}
