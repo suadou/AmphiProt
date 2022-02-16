@@ -16,7 +16,8 @@ import random
 import json
 from flask_restful import Api, Resource, reqparse
 from datetime import datetime
-import requests
+from werkzeug.utils import secure_filename
+import re
 from Bio import PDB
 import prody
 
@@ -57,10 +58,10 @@ class Index_post_form(FlaskForm):
     UniProt_id = StringField('UniProt id', validators=[Optional(), Length(min=4, max=16), Regexp(
         "[A-Za-z0-9]", message="UniProt id can only contain letters and numbers")])
     sequence = TextAreaField('Sequence', validators=[
-                             Optional(), Length(min=50, max=1000)])
-    file = FileField()
+                             Optional(), Length(min=50, max=1000000)])
+    file_input = FileField()
     table = SelectField(
-        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('vonHeijne-Blomberg', 'VonHeijne-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])
+        'Table', choices=[('Eisenberg', 'Eisenberg'), ('Kyte&Doolittle', 'Kyte & Doolittle'), ('Chothia', 'Chothia'), ('Janin', 'Janin'), ('Tanford', 'Tanford'), ('VonHeijen-Blomberg', 'VonHeijen-Blomberg'), ('Wimley', 'Wimley'), ('Wolfenden', 'Wolfenden')])
     BLAST = BooleanField('BLAST')
     isoelectric = BooleanField('Isoelectric point')
 
@@ -88,17 +89,25 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+class Query(db.Model):
+    __tablename__ = 'Query'
+    id = db.Column(db.Integer, primary_key=True)
+    Date = db.Column(db.DateTime)
+    Error = db.Column(db.String(255))
+    analysiss = db.relationship('Analysis', backref='Query')
+
 
 class Analysis(db.Model):
     __tablename__ = 'Analysis'
     id = db.Column(db.Integer, primary_key=True)
     Date = db.Column(db.DateTime)
     Error = db.Column(db.String(255))
+    protein_name = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey("User.id"))
-    #     query_id = db.Column(db.Integer, db.ForeignKey("Query.id"))
-    filess = db.relationship('Files', backref='analysis')
+    query_id = db.Column(db.Integer, db.ForeignKey("Query.id"))
+    filess = db.relationship('Files', backref='Analysis')
     options = db.relationship(
-        'Options', secondary=Options_table, backref='analysis')
+        'Options', secondary=Options_table, backref='Analysis')
 
 
 class Files(db.Model):
@@ -106,7 +115,6 @@ class Files(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     impout = db.Column(db.Boolean)
     path = db.Column(db.String(255))
-    queryid = db.Column(db.Integer) # Fuera, estaría solamente linkeado a analysis
     analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
 
@@ -126,42 +134,19 @@ def index():
 
 
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index_post():
     form = Index_post_form()
     data = {}
+    raw_data = {}
     if form.PDB_id.data:
         data["PDB_id"] = form.PDB_id.data
     elif form.UniProt_id.data:
         data["UniProt_id"] = form.UniProt_id.data
     elif form.sequence.data:
-        data["sequence"] = form.sequence.data
-        if check_fasta_input(data["sequence"]) == False:
-            flash("FASTA format not correct. Remeber it is mandatory a '>' header. Sequence must contain only amino acids letters.", "error")
-            return render_template('index.html', form=form)
-        else:
-            data["sequence"] = check_fasta_input(data["sequence"])
-            if len(data["sequence"][1]) < 50 or len(data["sequence"][1]) > 1000:
-                flash("Sequence must contain 50 to 1000 amino acids", "error")
-                return render_template('index.html', form=form)
-
-
-    #elif form.file.data:
-     #   if form.validate_on_submit():
-      #      f = form.file.meta
-       #     return f
-        #    filename = secure_filename(f)
-        #    f.save(os.path.join(
-         #   app.instance_path, 'file', filename
-         #    ))
-       # alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
-        #data['file']=[app.instance_path, 'file', filename]
-        #return data['file']
-           # for protein in parsedmulti(sequence):
-            #    if alphabets.search(protein) is not None:
-             #       data['file'].append(protein)
-        #return data['file']
-
-
+        raw_data["query"] = form.sequence.data
+    elif form.file_input.data:
+        data['file'] = form.file_input.data
     else:
         return redirect(url_for('index'))
     data["table"] = form.table.data
@@ -177,36 +162,121 @@ def index_post():
                 fp.close()
                 return redirect(url_for('loading', out=data["name"]))
         else:
-            #new_query = Query( Date = datetime.now(), Error = None)
-            #try:
-            #    db.session.add(new_query)
-            #    db.session.commit()
-            #except exc.IntegrityError:
-             #   db.session.rollback()
-             #   return render_template('loading.html', form=form)
+            new_query = Query( Date = datetime.now(), Error = None)
+            try:
+                db.session.add(new_query)
+                db.session.commit()
+            except exc.IntegrityError:
+                db.session.rollback()         
             data["name"] = current_user.username
-            new_analysis = Analysis(
-                Date=datetime.now(), Error=None, user_id=current_user.get_id()) # añadir quieri_id = new_query.id
-            try:
-                db.session.add(new_analysis)
-                db.session.commit()
-            except exc.IntegrityError:
-                db.session.rollback()
-                return render_template('loading.html', form=form)
-            #if data["BLAST"]:
-             #   new_option = Options( alltypes = db.Column(db.String(255))
-            with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                json.dump(data, fp)
-                fp.close()
-            new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+            if "PDB_id" in data:
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                for sequence in parsepdbgen(data["PDB_id"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        new_analysis = Analysis(
+                            Date=datetime.now(), Error=None, protein_name = sequence[0], user_id=current_user.get_id(), query_id = new_query.id)
+                        try:
+                            db.session.add(new_analysis)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                        with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                                + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
+                        try:
+                            db.session.add(new_file)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                    else:
+                        flash('PDB id' + data['PDB_id'] + 'does not exist', 'error')
+            elif "UniProt_id" in data:
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                for sequence in parseunicode(data["UniProt_id"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        new_analysis = Analysis(
+                            Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
+                        try:
+                            db.session.add(new_analysis)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                        with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                                + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
+                        try:
+                            db.session.add(new_file)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                    else:
+                        flash('UniProt id' + data['UniProt_id'] + 'does not exist', 'error')
+            elif "query" in raw_data:
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                for sequence in parsedmulti(raw_data["query"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        new_analysis = Analysis(
+                            Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
+                        try:
+                            db.session.add(new_analysis)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                        with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
                              + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
-            try:
-                db.session.add(new_file)
-                db.session.commit()
-            except exc.IntegrityError:
-                db.session.rollback()
-                return render_template('loading.html', form=form)
-            return redirect(url_for('loading', out=new_analysis.id))
+                        try:
+                            db.session.add(new_file)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                    else:
+                        print(sequence[0])
+                        flash('Invalid format in sequence' + sequence[1], 'error')
+            elif "file" in data:
+                del data["file"]
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                filename = secure_filename(form.file_input.data.filename)
+                form.file_input.data.save('static/tmp/'+filename)
+                ff = open('static/tmp/'+filename, 'r')
+                raw_data["file"] = ff.read()
+                for sequence in parsedmulti(raw_data["file"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        new_analysis = Analysis(
+                            Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
+                        try:
+                            db.session.add(new_analysis)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                        with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                             + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
+                        try:
+                            db.session.add(new_file)
+                            db.session.commit()
+                        except exc.IntegrityError:
+                            db.session.rollback()
+                    else:
+                        print(sequence[0])
+                        flash('Invalid format in sequence' + sequence[1], 'error')
+            #return redirect(url_for('loading', out=new_query.id))
     return render_template('index.html', form=form)
 
 @app.route('/loading/<out>', methods=['GET', 'POST'])
@@ -597,34 +667,6 @@ def pdbdown(code):
     r = requests.get(url, allow_redirects=True).content.decode("utf-8")
     return r
 
-def pdbstructdown(code, out):
-    url = "https://files.rcsb.org/download/" + code.upper() + ".pdb"
-    r = requests.get(url, allow_redirects=True).content.decode("utf-8")
-    PDBfile = open("static/data/"+out+".pdb", 'wt')
-    for line in r:
-        PDBfile.write(line)
-    PDBfile.close()
-    parser=PDB.PDBParser()
-    io=PDB.PDBIO()
-    structure = parser.get_structure(out, "static/data/"+out+".pdb")
-    chainnum = 0
-    chainsData = []
-    for chain in structure.get_chains():
-        chainnum += 1
-        io.set_structure(chain)
-        io.save("static/data/"+out+"_"+str(chainnum)+".pdb")
-
-        with open("static/data/"+out+"_"+str(chainnum)+".pdb", 'r') as currentChain:
-            chainLen = 0
-            for line in currentChain:
-                line_elements = line.split()
-                if line_elements[0]=="ATOM" and line_elements[2] == "CA":
-                    chainLen += 1
-                    chainID = line_elements[4]
-            chainsData.append([chainID, chainLen])
-
-    return chainsData
-
 def parsepdbgen(code):
     actual_protein = None
     sequence = ""
@@ -640,7 +682,7 @@ def parsepdbgen(code):
             actual_protein = line[0].lstrip(">")
             sequence = ""
             continue
-        sequence += line
+        sequence += line.rstrip("\n")
     yield tuple([actual_protein, sequence])
 
 
@@ -659,7 +701,7 @@ def parseunicode(code):
             actual_protein = line[1]
             sequence = ""
             continue
-        sequence += line
+        sequence += line.rstrip("\n")
     yield tuple([actual_protein, sequence])
 
 
@@ -669,13 +711,15 @@ def parsedmulti(string):
     for line in string.split("\n"):
         if line.startswith(">"):
             if actual_protein is None:
-                actual_protein = line
+                line = line.split("|")
+                actual_protein = line[1]
                 continue
             yield tuple([actual_protein, sequence])
-            actual_protein = line
+            line = line.split("|")
+            actual_protein = line[1]
             sequence = ""
             continue
-        sequence += line
+        sequence += line.rstrip("\n")
     yield tuple([actual_protein, sequence])
 
 def createAnalysisOptions():
