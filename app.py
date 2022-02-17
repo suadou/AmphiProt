@@ -735,7 +735,7 @@ def createAnalysisOptions():
     All_Options = ["Hydrophobicity&Amphipatic", "IsoelectricPoint", "BLASTP", "Hydrophobicity&Amphipatic&IsoelectricPoint",
     "Hydrophobicity&Amphipatic&BLASTP", "Hydrophobicity&Amphipatic&IsoelectricPoint&BLASTP"]
 
-    tables = ["Chothia", "Janin", "Tanford", "Wimley", "Eisenberg", "Kyte & Doolittle", "von Heijne-Blomberg", "Wolfenden"]
+    tables = ["Chothia", "Janin", "Tanford", "Wimley", "Eisenberg", "Kyte&Doolittle", "vonHeijne-Blomberg", "Wolfenden"]
 
     for eachOption in All_Options:
         for eachTable in tables:
