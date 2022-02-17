@@ -129,11 +129,10 @@ class Options(db.Model):
 @app.route('/')
 def index():
     form = Index_post_form()
-    createAnalysisOptions()
+    #createAnalysisOptions()
     return render_template('index.html', form=form)
 
 
-@app.route('/', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
 def index_post():
     form = Index_post_form()
@@ -152,6 +151,11 @@ def index_post():
     data["table"] = form.table.data
     data["BLAST"] = form.BLAST.data
     data["isoelectric"] = form.isoelectric.data
+    options_descriptor = 'Hydrophobicity&Amphipatic'
+    if (data["isoelectric"] == True):
+        options_descriptor = options_descriptor + '&IsoelectricPoint'
+    if (data["BLAST"] == True ):
+         options_descriptor = options_descriptor + '&BLASTP'
     if form.validate_on_submit():
         if current_user.is_anonymous:
             data["name"] = str(random.randint(1e9, 1e10))
@@ -169,6 +173,7 @@ def index_post():
             except exc.IntegrityError:
                 db.session.rollback()         
             data["name"] = current_user.username
+            new_options = Options.query.filter_by(alltypes=options_descriptor, table=data['table']).first()
             if "PDB_id" in data:
                 alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
                 for sequence in parsepdbgen(data["PDB_id"]):
@@ -177,6 +182,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, protein_name = sequence[0], user_id=current_user.get_id(), query_id = new_query.id)
+                        new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
@@ -202,6 +208,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
+			new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
@@ -227,6 +234,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
+			new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
@@ -258,6 +266,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
+			new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
