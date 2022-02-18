@@ -26,7 +26,7 @@ abspath = os.path.abspath(os.getcwd())
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:guapeton@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -208,7 +208,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
-			new_analysis.options.append(new_options)
+                        new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
@@ -234,7 +234,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
-			new_analysis.options.append(new_options)
+                        new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
@@ -251,8 +251,7 @@ def index_post():
                         except exc.IntegrityError:
                             db.session.rollback()
                     else:
-                        print(sequence[0])
-                        flash('Invalid format in sequence' + sequence[1], 'error')
+                        flash('Invalid format in sequence' + sequence[0], 'error')
             elif "file" in data:
                 del data["file"]
                 alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
@@ -266,7 +265,7 @@ def index_post():
                         data['sequence'] = sequence[1]
                         new_analysis = Analysis(
                             Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
-			new_analysis.options.append(new_options)
+                        new_analysis.options.append(new_options)
                         try:
                             db.session.add(new_analysis)
                             db.session.commit()
@@ -283,8 +282,7 @@ def index_post():
                         except exc.IntegrityError:
                             db.session.rollback()
                     else:
-                        print(sequence[0])
-                        flash('Invalid format in sequence' + sequence[1], 'error')
+                        flash('Invalid format in sequence' + sequence[0], 'error')
             #return redirect(url_for('loading', out=new_query.id))
     return render_template('index.html', form=form)
 
@@ -721,7 +719,10 @@ def parsedmulti(string):
         if line.startswith(">"):
             if actual_protein is None:
                 line = line.split("|")
-                actual_protein = line[1]
+                try:
+                    actual_protein = line[1]
+                except:
+                    actual_protein = line[0][1:]
                 continue
             yield tuple([actual_protein, sequence])
             line = line.split("|")
