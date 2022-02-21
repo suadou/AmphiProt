@@ -606,7 +606,7 @@ def parseunicode(code):
 def parsedmulti(string):
     actual_protein = None
     sequence = ""
-    for line in string.split("\n"):
+    for line in string.splitlines():
         if line.startswith(">"):
             if actual_protein is None:
                 line = line.split("|")
