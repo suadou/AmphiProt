@@ -617,7 +617,10 @@ def parsedmulti(string):
                 continue
             yield tuple([actual_protein, sequence])
             line = line.split("|")
-            actual_protein = line[1]
+            try:
+                actual_protein = line[1]
+            except:
+                actual_protein = line[0][1:]
             sequence = ""
             continue
         sequence += line.rstrip("\n")
