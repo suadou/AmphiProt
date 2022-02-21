@@ -352,15 +352,19 @@ def loading(out):
                 data = json.load(f)
                 table = read_table(data['table'])
                 fourier(data['sequence'], table, out, file.strip('_input.json'))
-                if "isoelectric" in data:
-        	        IP = isoelectric_p(data["sequence"], data["name"], out) # revisarlo, no se si funciona
+                if data["isoelectric"]:
+        	        isoelectric_p(data["sequence"], out, file.strip('_input.json'))
     else:
         for analysis in Analysis.query.filter_by(query_id = out).all():
             f = open("static/data/"+ "u_"+ current_user.username+"/inputs/"+str(analysis.id)+"_input.json")
             data = json.load(f)
             table = read_table(data['table'])
             fourier(data['sequence'], table, "u_"+ current_user.username+"/outputs" , str(analysis.id))
-            files_sufix = ["_Fourier.png", "_hydroplot.png", "_fourier.out", "_hydro.out"]
+            if data["isoelectric"]:
+                isoelectric_p(data['sequence'], "u_"+ current_user.username+"/outputs" , str(analysis.id))
+                files_sufix = ["_Fourier.png", "_hydroplot.png", "_fourier.out", "_hydro.out", "_isoelectric.out"]
+            else:
+                files_sufix = ["_Fourier.png", "_hydroplot.png", "_fourier.out", "_hydro.out"]
             for sufix in files_sufix:
                 new_file = Files(input=False, path="data/u_"+current_user.username+"/outputs/"
                              + str(analysis.id)+sufix,  analyss_id=analysis.id)
@@ -476,7 +480,7 @@ def anonoutput(analysis_id):
             f"/data/{analysis_id}/{analysis_id}_hydroplot.png",
             f"data/{analysis_id}/{analysis_id}_{lastchain}.pdb",
             lastchainLen,
-	    f"./data/{analysis_id}/{analysis_id}_isoelectric.txt"]
+	    f"./data/{analysis_id}/{analysis_id}_isoelectric.out"]
     return render_template('anonoutput.html', list=list)
 ########## Functions ##########################################################
 
