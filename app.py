@@ -488,7 +488,12 @@ def output(analysis_id):
     files = Files.query.filter_by(analyss_id=analysis_id)
     list = [str(files[1].path), str(files[2].path), str(files[-1].path), chainLen]
     #list.append(data["PDB_id"]+".pdb")
-    return render_template('output.html', list=list)
+    if os.path.isfile("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out"):
+        with open("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out", 'r') as f:
+            content = f.read()
+            return render_template('output.html', list=list, content=content)
+    else:
+        return render_template('output.html', list=list)
 
 
 @app.route('/workspace/<user_id>')
