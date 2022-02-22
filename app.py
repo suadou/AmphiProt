@@ -397,7 +397,7 @@ def loading(out):
                 blast_record = prody.blastPDB(data['sequence'], timeout=5)
                 try:
                     best_hit = blast_record.getBest()
-                    pdbstructdown(best_hit['pdb_id'], out+"/"+file.strip('_input.json')+"_PDB", best_hit['chain_id'])
+                    pdbstructdown(best_hit['pdb_id'], "u_"+current_user.username+"/outputs/"+str(analysis.id)+"_PDB", best_hit['chain_id'])
                     new_file = Files(input=False, path="data/u_"+current_user.username+"/outputs/"
                             +str(analysis.id)+"_PDB.pdb", analyss_id=analysis.id)
                 except TypeError as e:
