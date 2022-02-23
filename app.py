@@ -27,7 +27,7 @@ abspath = os.path.abspath(os.getcwd())
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:guapeton@127.0.0.1/dbwdatabase'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:jXuu230@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -227,6 +227,8 @@ def index_post():
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
+            finally:
+                db.session.close()
             data["name"] = current_user.username
             new_options = Options.query.filter_by(alltypes=options_descriptor, table=data['table']).first()
             if "PDB_id" in data:
@@ -243,6 +245,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
@@ -253,6 +257,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                     else:
                         flash('PDB id' + data['PDB_id'] + 'does not exist', 'error')
             elif "UniProt_id" in data:
@@ -269,6 +275,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
@@ -279,6 +287,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                     else:
                         flash('UniProt id' + data['UniProt_id'] + 'does not exist', 'error')
             elif "query" in raw_data:
@@ -295,6 +305,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
@@ -305,6 +317,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                     else:
                         flash('Invalid format in sequence ' + sequence[0], 'error')
             elif "file" in data:
@@ -328,6 +342,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
@@ -338,6 +354,8 @@ def index_post():
                             db.session.commit()
                         except exc.IntegrityError:
                             db.session.rollback()
+                        finally:
+                            db.session.close()
                     else:
                         flash('Invalid format in sequence' + sequence[0], 'error')
             return redirect(url_for('loading', out=new_query.id))
@@ -395,6 +413,8 @@ def loading(out):
                     db.session.commit()
                 except exc.IntegrityError:
                     db.session.rollback()
+                finally:
+                    db.session.close()
             if 'PDB_id' in data.keys():
                 pdbstructdown(data['PDB_id'], "u_"+current_user.username+"/outputs/"+str(analysis.id)+"_PDB", analysis_num)
                 new_file = Files(input=False, path="data/u_"+current_user.username+"/outputs/"
@@ -413,6 +433,8 @@ def loading(out):
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
+            finally:
+                db.session.close()
         if analysis_num > 1:
             return redirect(url_for('workspace', user_id=current_user.get_id()))
         elif analysis_num == 1:
