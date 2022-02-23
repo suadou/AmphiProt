@@ -523,7 +523,7 @@ def download(analysis_id):
     files = Files.query.filter_by(analyss_id=analysis_id)
     file = str(files[0].path)
     path = file.split("/")
-    return send_from_directory(app.root_path +"/static/"+ "/".join(path[0:-1]), filename=path[-1], as_attachment=True)
+    return send_from_directory(app.root_path +"/static/"+ "/".join(path[0:-1]), path=path[-1], filename=path[-1], as_attachment=True)
 
 
 @app.route('/logout')
