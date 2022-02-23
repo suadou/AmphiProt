@@ -71,6 +71,15 @@ Dashboard
 	<h2>Hydrophobicity plot</h2>
 	<img src="{{ url_for('.static', filename=list[1]) }}">
 	</div>
+	
+{% block content1 %}
+  {% if content %}
+    <div class="column">
+	<h2>Isoelectric point</h2>
+	<pre>{{ content }}</pre>
+	</div>
+  {% endif %}
+{% endblock %}
 
 <script>
   var stage;

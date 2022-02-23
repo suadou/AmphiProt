@@ -20,6 +20,7 @@ from werkzeug.utils import secure_filename
 import re
 from Bio import PDB
 import prody
+import requests
 
 abspath = os.path.abspath(os.getcwd())
 
@@ -113,7 +114,7 @@ class Analysis(db.Model):
 class Files(db.Model):
     __tablename__ = 'Files'
     id = db.Column(db.Integer, primary_key=True)
-    impout = db.Column(db.Boolean)
+    input = db.Column(db.Boolean)
     path = db.Column(db.String(255))
     analyss_id = db.Column(db.Integer, db.ForeignKey("Analysis.id"))
 
@@ -158,20 +159,74 @@ def index_post():
          options_descriptor = options_descriptor + '&BLASTP'
     if form.validate_on_submit():
         if current_user.is_anonymous:
+            i = 1
             data["name"] = str(random.randint(1e9, 1e10))
+            data["date"] = str(datetime.now())
             path = "static/data/"+data["name"]
             os.mkdir(path)
-            with open("static/data/"+data["name"]+"/"+data["name"]+"_input.json", 'w') as fp:
-                json.dump(data, fp)
-                fp.close()
-                return redirect(url_for('loading', out=data["name"]))
+            if "PDB_id" in data:
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                for sequence in parsepdbgen(data["PDB_id"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        with open(path + '/' + str(i) + '_input.json', 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        i += 1
+                    else:
+                        flash('PDB id' + data['PDB_id'] + 'does not exist', 'error')
+            elif "UniProt_id" in data:
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                for sequence in parseunicode(data["UniProt_id"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        with open(path + '/' + str(i) + '_input.json', 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        i += 1
+                    else:
+                        flash('UniProt id' + data['UniProt_id'] + 'does not exist', 'error')
+            elif "query" in raw_data:
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                for sequence in parsedmulti(raw_data["query"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        with open(path + '/' + str(i) + '_input.json', 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        i += 1
+                    else:
+                        flash('Invalid format in sequence' + sequence[0], 'error')
+            elif "file" in data:
+                del data["file"]
+                alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                filename = secure_filename(form.file_input.data.filename)
+                form.file_input.data.save('static/tmp/'+filename)
+                ff = open('static/tmp/'+filename, 'r')
+                raw_data["file"] = ff.read()
+                ff.close()
+                os.remove('static/tmp/'+filename)
+                for sequence in parsedmulti(raw_data["file"]):
+                    if alphabets.search(sequence[1]) is not None:
+                        data['protein_name'] = sequence[0]
+                        data['sequence'] = sequence[1]
+                        with open(path + '/' + str(i) + '_input.json', 'w') as fp:
+                            json.dump(data, fp)
+                            fp.close()
+                        i += 1
+                    else:
+                        flash('Invalid format in sequence' + sequence[0], 'error')
+            return redirect(url_for('loading', out=data['name']))
         else:
             new_query = Query( Date = datetime.now(), Error = None)
             try:
                 db.session.add(new_query)
                 db.session.commit()
             except exc.IntegrityError:
-                db.session.rollback()         
+                db.session.rollback()
             data["name"] = current_user.username
             new_options = Options.query.filter_by(alltypes=options_descriptor, table=data['table']).first()
             if "PDB_id" in data:
@@ -191,7 +246,7 @@ def index_post():
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
-                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                        new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
                                 + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
                         try:
                             db.session.add(new_file)
@@ -217,7 +272,7 @@ def index_post():
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
-                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                        new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
                                 + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
                         try:
                             db.session.add(new_file)
@@ -243,7 +298,7 @@ def index_post():
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
-                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                        new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
                              + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
                         try:
                             db.session.add(new_file)
@@ -251,7 +306,7 @@ def index_post():
                         except exc.IntegrityError:
                             db.session.rollback()
                     else:
-                        flash('Invalid format in sequence' + sequence[0], 'error')
+                        flash('Invalid format in sequence ' + sequence[0], 'error')
             elif "file" in data:
                 del data["file"]
                 alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
@@ -259,6 +314,8 @@ def index_post():
                 form.file_input.data.save('static/tmp/'+filename)
                 ff = open('static/tmp/'+filename, 'r')
                 raw_data["file"] = ff.read()
+                ff.close()
+                os.remove('static/tmp/'+filename)
                 for sequence in parsedmulti(raw_data["file"]):
                     if alphabets.search(sequence[1]) is not None:
                         data['protein_name'] = sequence[0]
@@ -274,7 +331,7 @@ def index_post():
                         with open("static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
                             json.dump(data, fp)
                             fp.close()
-                        new_file = Files(impout=True, path="data/u_"+current_user.username+"/inputs/"
+                        new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
                              + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
                         try:
                             db.session.add(new_file)
@@ -283,208 +340,85 @@ def index_post():
                             db.session.rollback()
                     else:
                         flash('Invalid format in sequence' + sequence[0], 'error')
-            #return redirect(url_for('loading', out=new_query.id))
+            return redirect(url_for('loading', out=new_query.id))
     return render_template('index.html', form=form)
 
 @app.route('/loading/<out>', methods=['GET', 'POST'])
 def loading(out):
     if current_user.is_anonymous:
-        f = open("static/data/"+out+"/"+out+"_input.json")
-        data = json.load(f)
-        print(data)
+        file_num = 0
+        files = os.listdir("static/data/"+out)
+        for file in files:
+            if re.compile('_input.json$').search(file) is not None:
+                file_num += 1
+                actual_file = file.rstrip('_input.json')
+                f = open("static/data/"+out+"/"+file)
+                data = json.load(f)
+                table = read_table(data['table'])
+                fourier(data['sequence'], table, out, file.strip('_input.json'))
+                if data["isoelectric"]:
+        	        isoelectric_p(data["sequence"], out, file.strip('_input.json')) # revisarlo, no se si funciona
+                if 'PDB_id' in data.keys():
+                    pdbstructdown(data['PDB_id'], out+"/"+file.strip('_input.json')+"_PDB", file_num)
+                    with open("tempfile.json", 'w') as testjson:
+                        testjson.write(out+"/"+file.strip('_input.json')+"_PDB")
+                else:
+                    blast_record = prody.blastPDB(data['sequence'], timeout=9999)
+                    try:
+                        best_hit = blast_record.getBest()
+                        pdbstructdown(best_hit['pdb_id'], out+"/"+file.strip('_input.json')+"_PDB", best_hit['chain_id'])
+                    except TypeError as e:
+                        pass
+        if file_num > 1:
+            return redirect(url_for('anonworkspace', anonuser_id=out))
+        elif file_num == 1:
+            return redirect(url_for('anonoutput', anonuser_id=out, analysis_id=actual_file))
+
     else:
-        f = open("static/data/u_"+current_user.username
-                 + "/inputs/"+str(out)+"_input.json")
-        data = json.load(f)
-        data["name"] = "u_"+data["name"]+"/outputs"
-    if data["table"]:
-        table = read_table(data["table"])
-    if "PDB_id" in data:
-        analisis_ids = []
-        analisis_ids.append(out)
-        for id in data["PDB_id"]:
-            if current_user.is_anonymous:
-                chainsData = pdbstructdown(data["PDB_id"], out+"/"+out)
-                with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
-                    json.dump(chainsData, PDBjson)
+        analysis_num = 0
+        for analysis in Analysis.query.filter_by(query_id = out).all():
+            analysis_num = analysis_num + 1
+            f = open("static/data/"+ "u_"+ current_user.username+"/inputs/"+str(analysis.id)+"_input.json")
+            data = json.load(f)
+            table = read_table(data['table'])
+            fourier(data['sequence'], table, "u_"+ current_user.username+"/outputs" , str(analysis.id))
+            if data["isoelectric"]:
+                isoelectric_p(data['sequence'], "u_"+ current_user.username+"/outputs" , str(analysis.id))
+                files_sufix = ["_Fourier.png", "_hydroplot.png", "_fourier.out", "_hydro.out", "_isoelectric.out"]
             else:
-                chainsData = pdbstructdown(data["PDB_id"], "u_"+current_user.username+"/outputs/"+out+"_PDB")
-                with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
-                    json.dump(chainsData, PDBjson)
-        for sequence in parsepdbgen(data["PDB_id"]):
-            fourier(sequence[1], table, data["name"], out)
-        if current_user.is_anonymous:
-            return redirect(url_for('anonoutput', analysis_id=out))
-        new_file = Files(impout=False, path="data/u_"+current_user.username
-                            + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
-
-        try:
-            db.session.add(new_file)
-            db.session.commit()
-        except exc.IntegrityError:
-            db.session.rollback()
-        new_file = Files(impout=False, path="data/u_"+current_user.username
-                     + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
-
-        try:
-             db.session.add(new_file)
-             db.session.commit()
-
-        except exc.IntegrityError:
-             db.session.rollback()
-
-        f = open(f"static/data/u_"+current_user.username+"/outputs/"+out+".json")
-        PDBdata = json.load(f)
-        lastchain = len(PDBdata)
-        new_file = Files(impout=False, path="data/u_"+current_user.username
-                      + "/outputs/"+out+"_PDB_"+str(lastchain)+".pdb", analyss_id=out)
-        try:
-            db.session.add(new_file)
-            db.session.commit()
-
-        except exc.IntegrityError:
-            db.session.rollback()
-
-        #new_file = Files(impout=False, path="data/u_"+current_user.username
-        #             + "/outputs/"+str(out)+"_PDBHit.pdb")
-           #     new_analysis = Analysis(
-           #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
-           #     try:
-          #          db.session.add(new_analysis)
-         #           db.session.commit()
-             #   except exc.IntegrityError:
-             #       db.session.rollback()
-            #        out = new_analysis.id
-            #        analisis_ids.append(out)
-            #db.session.delete(out)
-            #db.session.commiy()
-        return redirect(url_for('output', analysis_id=out))
-    elif "UniProt_id" in data:
-        analisis_ids = []
-        analisis_ids.append(out)
-        for sequence in parseunicode(data["UniProt_id"]):
-            fourier(sequence[1], table, data["name"], out)
-            blast_record = prody.blastPDB(sequence[1])
-            best_hit = blast_record.getBest()
-            #with open("tempfile.json", 'w') as testjson:
-            #    json.dump(best_hit, testjson)
-            if current_user.is_anonymous:
-                chainsData = pdbstructdown(best_hit['pdb_id'], out+"/"+out)
-                with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
-                    json.dump(chainsData, PDBjson)
+                files_sufix = ["_Fourier.png", "_hydroplot.png", "_fourier.out", "_hydro.out"]
+            for sufix in files_sufix:
+                new_file = Files(input=False, path="data/u_"+current_user.username+"/outputs/"
+                             + str(analysis.id)+sufix,  analyss_id=analysis.id)
+                try:
+                    db.session.add(new_file)
+                    db.session.commit()
+                except exc.IntegrityError:
+                    db.session.rollback()
+            if 'PDB_id' in data.keys():
+                pdbstructdown(data['PDB_id'], "u_"+current_user.username+"/outputs/"+str(analysis.id)+"_PDB", analysis_num)
+                new_file = Files(input=False, path="data/u_"+current_user.username+"/outputs/"
+                        +str(analysis.id)+"_PDB.pdb", analyss_id=analysis.id)
             else:
-                chainsData = pdbstructdown(best_hit['pdb_id'], "u_"+current_user.username+"/outputs/"+out+"_PDB")
-                with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
-                    json.dump(chainsData, PDBjson)
-        if current_user.is_anonymous:
-            return redirect(url_for('anonoutput', analysis_id=out))
-        new_file = Files(impout=False, path="data/u_"+current_user.username
-                            + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
-
-        try:
-            db.session.add(new_file)
-            db.session.commit()
-        except exc.IntegrityError:
-            db.session.rollback()
-        new_file = Files(impout=False, path="data/u_"+current_user.username
-                     + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
-
-        try:
-             db.session.add(new_file)
-             db.session.commit()
-
-        except exc.IntegrityError:
-             db.session.rollback()
-
-        f = open(f"static/data/u_"+current_user.username+"/outputs/"+out+".json")
-        PDBdata = json.load(f)
-        lastchain = len(PDBdata)
-        new_file = Files(impout=False, path="data/u_"+current_user.username
-                      + "/outputs/"+out+"_PDB_"+str(lastchain)+".pdb", analyss_id=out)
-        try:
-            db.session.add(new_file)
-            db.session.commit()
-
-        except exc.IntegrityError:
-            db.session.rollback()
-           #     new_analysis = Analysis(
-           #     Date=datetime.now(), Error=None, user_id=current_user.get_id())
-           #     try:
-          #          db.session.add(new_analysis)
-         #           db.session.commit()
-             #   except exc.IntegrityError:
-             #       db.session.rollback()
-            #        out = new_analysis.id
-            #        analisis_ids.append(out)
-            #db.session.delete(out)
-            #db.session.commiy()
-        if current_user.is_anonymous:
-            return redirect(url_for('anonoutput', analysis_id=out))
-        return redirect(url_for('output', analysis_id=out))
-    elif "sequence" in data:
-        fourier(data["sequence"][1], table, data["name"], out)
-        blast_record = prody.blastPDB(data["sequence"][1])
-        best_hit = blast_record.getBest()
-        if current_user.is_anonymous:
-            chainsData = pdbstructdown(best_hit['pdb_id'], out+"/"+out)
-            with open("static/data/"+out+"/"+out+".json", 'w') as PDBjson:
-                json.dump(chainsData, PDBjson)
-        else:
-            chainsData = pdbstructdown(best_hit['pdb_id'], "u_"+current_user.username+"/outputs/"+out+"_PDB")
-            with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
-                json.dump(chainsData, PDBjson)
-        if not current_user.is_anonymous:
-            new_file = Files(impout=False, path="data/u_"+current_user.username
-                             + "/outputs/"+str(out)+"_Fourier.png",  analyss_id=out)
-
+                blast_record = prody.blastPDB(data['sequence'], timeout=9999)
+                try:
+                    best_hit = blast_record.getBest()
+                    pdbstructdown(best_hit['pdb_id'], "u_"+current_user.username+"/outputs/"+str(analysis.id)+"_PDB", best_hit['chain_id'])
+                    new_file = Files(input=False, path="data/u_"+current_user.username+"/outputs/"
+                            +str(analysis.id)+"_PDB.pdb", analyss_id=analysis.id)
+                except TypeError as e:
+                    pass
             try:
                 db.session.add(new_file)
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
-            new_file = Files(impout=False, path="data/u_"+current_user.username
-                             + "/outputs/"+str(out)+"_hydroplot.png",  analyss_id=out)
-
-            try:
-                db.session.add(new_file)
-                db.session.commit()
-
-            except exc.IntegrityError:
-                db.session.rollback()
-
-            f = open(f"static/data/u_"+current_user.username+"/outputs/"+out+".json")
-            PDBdata = json.load(f)
-            lastchain = len(PDBdata)
-            new_file = Files(impout=False, path="data/u_"+current_user.username
-                          + "/outputs/"+out+"_PDB_"+str(lastchain)+".pdb", analyss_id=out)
-            try:
-                db.session.add(new_file)
-                db.session.commit()
-
-            except exc.IntegrityError:
-                db.session.rollback()
-        
-        if current_user.is_anonymous:
-            return redirect(url_for('anonoutput', analysis_id=out))
-        
-        if "isoelectric" in data:
-        	IP = isoelectric_p(data["sequence"][1], data["name"], out)
-        	if not current_user.is_anonymous:
-        	    new_file = Files(impout=False, path="data/u_"+current_user.username
-        	                     + "/outputs/"+str(out)+"_isoelectric.txt",  analyss_id=out)
-	
-        	    try:
-        	        db.session.add(new_file)
-        	        db.session.commit()
-        	    except exc.IntegrityError:
-        	        db.session.rollback()
-	
-        	if current_user.is_anonymous:
-        	    return redirect(url_for('anonoutput', analysis_id=out))
-        return redirect(url_for('output', analysis_id=out))
-    else:
-        error
-
+        if analysis_num > 1:
+            return redirect(url_for('workspace', user_id=current_user.get_id()))
+        elif analysis_num == 1:
+            return redirect(url_for('output', analysis_id=analysis.id))
+        #with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
+        #    json.dump(chainsData, PDBjson)
     return render_template('loading.html')
 
 
@@ -552,13 +486,24 @@ def output(analysis_id):
     if analysis.user_id != user.id:
         flash("You are not authorized here.", "error")
         return redirect(url_for('index'))
-    f = open(f"static/data/u_"+current_user.username+"/outputs/"+analysis_id+".json")
-    PDBdata = json.load(f)
-    lastchainLen = PDBdata[-1][1]
+    chainLen = 0
+    if os.path.exists("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"PDB.pdb"):
+        with open("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"PDB.pdb", 'r') as currentChain:
+            for line in currentChain:
+                line_elements = line.split()
+                if line_elements[0]=="ATOM" and line_elements[2] == "CA":
+                    chainLen += 1
+    else:
+        flash("PDB Download for this output failed. Structure visualization will not work")
     files = Files.query.filter_by(analyss_id=analysis_id)
-    list = [str(files[1].path), str(files[2].path), str(files[3].path), lastchainLen]
+    list = [str(files[1].path), str(files[2].path), str(files[-1].path), chainLen]
     #list.append(data["PDB_id"]+".pdb")
-    return render_template('output.html', list=list)
+    if os.path.isfile("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out"):
+        with open("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out", 'r') as f:
+            content = f.read()
+            return render_template('output.html', list=list, content=content)
+    else:
+        return render_template('output.html', list=list)
 
 
 @app.route('/workspace/<user_id>')
@@ -580,19 +525,38 @@ def logout():
     flash("You are now logged out", "info")
     return redirect(url_for('index'))
 
-@app.route('/anonoutput/<analysis_id>')
-def anonoutput(analysis_id):
-    f = open(f"static/data/{analysis_id}/{analysis_id}.json")
-    PDBdata = json.load(f)
-    lastchain = len(PDBdata)
-    lastchainLen = PDBdata[-1][1]
-    #lastchainLen = PDBdata[str(len(PDBdata.keys()))][1]
-    list = [f"data/{analysis_id}/{analysis_id}_Fourier.png",
-            f"/data/{analysis_id}/{analysis_id}_hydroplot.png",
-            f"data/{analysis_id}/{analysis_id}_{lastchain}.pdb",
-            lastchainLen,
-	    f"./data/{analysis_id}/{analysis_id}_isoelectric.txt"]
+@app.route('/anonoutput/<anonuser_id>/<analysis_id>')
+def anonoutput(anonuser_id, analysis_id):
+    f = open(f"static/data/{anonuser_id}/{analysis_id}_input.json")
+    if os.path.exists(f"static/data/{anonuser_id}/{analysis_id}_PDB.pdb"):
+        with open(f"static/data/{anonuser_id}/{analysis_id}_PDB.pdb", 'r') as currentChain:
+            chainLen = 0
+            for line in currentChain:
+                line_elements = line.split()
+                if line_elements[0]=="ATOM" and line_elements[2] == "CA":
+                    chainLen += 1
+    else:
+        flash("PDB Download for this output failed. Structure visualization will not work")
+    list = [f"data/{anonuser_id}/{analysis_id}_Fourier.png",
+            f"/data/{anonuser_id}/{analysis_id}_hydroplot.png",
+            f"data/{anonuser_id}/{analysis_id}_PDB.pdb",
+            chainLen,
+	    f"./data/{anonuser_id}/{analysis_id}_isoelectric.out"]
     return render_template('anonoutput.html', list=list)
+
+@app.route('/anonworkspace/<anonuser_id>')
+def anonworkspace(anonuser_id):
+    analysis = {}
+    files_list = []
+    list = []
+    files = os.listdir(f"static/data/{anonuser_id}")
+    for file in files:
+        if re.compile('_input.json$').search(file) is not None:
+            f = open("static/data/" + anonuser_id + "/" + file)
+            data = json.load(f)
+            analysis[file.rstrip('_input.json')] = {'protein_name' : data['protein_name'], 'date' : data['date'], 'id' : file.rstrip('_input.json')}
+    return render_template('anonworkspace.html', analysiss=analysis, user = anonuser_id)
+
 ########## Functions ##########################################################
 
 def check_fasta_input(input):
@@ -661,6 +625,12 @@ def fourier(sequence, table, user, analysis):
     pyplot.grid(color='b', linestyle='-', linewidth=0.75)
     pyplot.ylim([1, len(I)])
     pyplot.savefig("./static/data/"+user+"/"+analysis+"_hydroplot.png", transparent=True)
+    I[0:len(hydro)+12, 0:12].dump("./static/data/"+user+"/"+analysis+"_fourier.out")
+    fp = open("./static/data/"+user+"/"+analysis+"_hydro.out", 'w')
+    for line in hydro:
+        fp.write(str(line)+'\n')
+    fp.close()
+
 
 
 def unidown(code):
@@ -673,6 +643,35 @@ def pdbdown(code):
     url = "https://www.rcsb.org/fasta/entry/" + code + "/download"
     r = requests.get(url, allow_redirects=True).content.decode("utf-8")
     return r
+
+def pdbstructdown(code, out, input_chainnum):
+    url = "https://files.rcsb.org/download/" + code.upper() + ".pdb"
+    r = requests.get(url, allow_redirects=True).content.decode("utf-8")
+    PDBfile = open("static/data/tempPDB.pdb", 'wt')
+    for line in r:
+        PDBfile.write(line)
+    PDBfile.close()
+    parser=PDB.PDBParser()
+    io=PDB.PDBIO()
+    structure = parser.get_structure(out, "static/data/tempPDB.pdb")
+    chainnum = 0
+    chainsData = []
+    for chain in structure.get_chains():
+        chainnum += 1
+        if chainnum == input_chainnum or chain.get_id() == input_chainnum:
+            io.set_structure(chain)
+            io.save("static/data/"+out+".pdb")
+    os.remove("static/data/tempPDB.pdb")
+        #with open("static/data/"+out+"_"+str(chainnum)+".pdb", 'r') as currentChain:
+        #    chainLen = 0
+        #    for line in currentChain:
+        #        line_elements = line.split()
+        #        if line_elements[0]=="ATOM" and line_elements[2] == "CA":
+        #            chainLen += 1
+        #            chainID = line_elements[4]
+        #    chainsData.append([chainID, chainLen])
+
+    #return chainsData
 
 def parsepdbgen(code):
     actual_protein = None
@@ -713,9 +712,10 @@ def parseunicode(code):
 
 
 def parsedmulti(string):
+    #string = string.replace('\r', '')
     actual_protein = None
     sequence = ""
-    for line in string.split("\n"):
+    for line in string.splitlines():
         if line.startswith(">"):
             if actual_protein is None:
                 line = line.split("|")
@@ -726,7 +726,10 @@ def parsedmulti(string):
                 continue
             yield tuple([actual_protein, sequence])
             line = line.split("|")
-            actual_protein = line[1]
+            try:
+                actual_protein = line[1]
+            except:
+                actual_protein = line[0][1:]
             sequence = ""
             continue
         sequence += line.rstrip("\n")
@@ -758,7 +761,7 @@ def isoelectric_p(sequence, user, analysis):
     isoelectric_point = ipc.predict_isoelectric_point_ProMoST(sequence)
     with open("./static/data/"+user+"/"+analysis+"_isoelectric.txt", 'w') as f:
         f.write('%f' % isoelectric_point)
-                
+
 # I left this at the end bc I am not sure if it has to be there?
 if __name__ == '__main__':
     app.run(debug=True)
