@@ -490,7 +490,7 @@ def output(analysis_id):
     else:
         flash("PDB Download for this output failed. Structure visualization will not work")
     files = Files.query.filter_by(analyss_id=analysis_id)
-    list = [str(files[1].path), str(files[2].path), str(files[-1].path), chainLen]
+    list = [str(files[1].path), str(files[2].path), str(files[-1].path), chainLen,str(files[0].path),str(files[3].path)]
     #list.append(data["PDB_id"]+".pdb")
     if os.path.isfile("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out"):
         with open("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out", 'r') as f:
