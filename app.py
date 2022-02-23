@@ -1,7 +1,7 @@
 from distutils.log import error
 from http.client import FORBIDDEN
 from turtle import done
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, send_from_directory
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField, EmailField
@@ -27,7 +27,7 @@ abspath = os.path.abspath(os.getcwd())
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = 'PotatoPatato'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:jXuu230@127.0.0.1/dbwdatabase'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:PotatoPatato98*@127.0.0.1/dbwdatabase'
 Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -361,7 +361,7 @@ def loading(out):
                     with open("tempfile.json", 'w') as testjson:
                         testjson.write(out+"/"+file.strip('_input.json')+"_PDB")
                 else:
-                    blast_record = prody.blastPDB(data['sequence'], timeout=5)
+                    blast_record = prody.blastPDB(data['sequence'], timeout=9999)
                     try:
                         best_hit = blast_record.getBest()
                         pdbstructdown(best_hit['pdb_id'], out+"/"+file.strip('_input.json')+"_PDB", best_hit['chain_id'])
@@ -510,6 +510,20 @@ def workspace(user_id):
         files = Files.query.filter_by(analyss_id=x.id)
         list += [files]
     return render_template('workspace.html', analysiss=analysis, list=list)
+
+
+@app.route('/download/<analysis_id>', methods=['GET', 'POST'])
+@login_required
+def download(analysis_id):
+    analysis = Analysis.query.filter_by(id=analysis_id).first()
+    user = User.query.filter_by(username=current_user.username).first()
+    if analysis.user_id != user.id:
+        flash("You are not authorized here.", "error")
+        return redirect(url_for('index'))
+    files = Files.query.filter_by(analyss_id=analysis_id)
+    file = str(files[0].path)
+    path = file.split("/")
+    return send_from_directory(app.root_path +"/static/"+ "/".join(path[0:-1]), filename=path[-1], as_attachment=True)
 
 
 @app.route('/logout')
