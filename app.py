@@ -407,6 +407,10 @@ def loading(out):
                 db.session.commit()
             except exc.IntegrityError:
                 db.session.rollback()
+        if analysis_num > 1:
+            return redirect(url_for('workspace', user_id=current_user.get_id()))
+        elif analysis_num == 1:
+            return redirect(url_for('output', analysis_id=analysis.id))
         #with open("static/data/u_"+current_user.username+"/outputs"+"/"+out+".json", 'w') as PDBjson:
         #    json.dump(chainsData, PDBjson)
     return render_template('loading.html')
