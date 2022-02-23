@@ -1,7 +1,7 @@
 from distutils.log import error
 from http.client import FORBIDDEN
 from turtle import done
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, send_from_directory
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField, BooleanField, EmailField
@@ -496,7 +496,7 @@ def output(analysis_id):
     else:
         flash("PDB Download for this output failed. Structure visualization will not work")
     files = Files.query.filter_by(analyss_id=analysis_id)
-    list = [str(files[1].path), str(files[2].path), str(files[-1].path), chainLen]
+    list = [str(files[1].path), str(files[2].path), str(files[-1].path), chainLen,str(files[3].path),str(files[4].path)]
     #list.append(data["PDB_id"]+".pdb")
     if os.path.isfile("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out"):
         with open("static/data/u_"+current_user.username+"/outputs/"+analysis_id+"_"+"isoelectric.out", 'r') as f:
@@ -517,6 +517,18 @@ def workspace(user_id):
         list += [files]
     return render_template('workspace.html', analysiss=analysis, list=list)
 
+@app.route('/download/<analysis_id>', methods=['GET', 'POST'])
+@login_required
+def download(analysis_id):
+    analysis = Analysis.query.filter_by(id=analysis_id).first()
+    user = User.query.filter_by(username=current_user.username).first()
+    if analysis.user_id != user.id:
+        flash("You are not authorized here.", "error")
+        return redirect(url_for('index'))
+    files = Files.query.filter_by(analyss_id=analysis_id)
+    file = str(files[0].path)
+    path = file.split("/")
+    return send_from_directory(app.root_path +"/static/"+ "/".join(path[0:-1]), filename=path[-1], as_attachment=True)
 
 @app.route('/logout')
 @login_required
