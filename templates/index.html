@@ -49,7 +49,8 @@ AmphiProt
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-      <form class="form" method=POST enctype="multipart/form-data">
+    <div class="container" id="form">
+      <form class="form" method=POST enctype="multipart/form-data" onsubmit="Loading()">
           {{ form.hidden_tag() }}
           {{ wtf.form_field(form.PDB_id) }}
           {{ wtf.form_field(form.UniProt_id) }}
@@ -60,12 +61,23 @@ AmphiProt
           {{ wtf.form_field(form.isoelectric) }}
           <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
       </form>
-
     </div><!-- /.container -->
-
+    <div class="container px-5 " style="margin-top: +200px; margin-bottom: +200px; display:none;" id="loading">
+      <h2 class="text-center py-5">Your request is being processed...<br>Please wait.</h2>
+      <span class="sr-only py-5" >Loading...</span>
 <footer>
   <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
   <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>
 </footer>
+
+<script>
+          
+  function Loading() {
+  const el = document.getElementById('loading');
+  el.style.display = "block";
+  const el2 = document.getElementById('form');
+  el2.style.display = "none";
+  }
+</script>
 
 {% endblock %}
