@@ -793,7 +793,7 @@ def create_app(test_config=None):
                     db.session.close()
 
     def isoelectric_p(sequence, user, analysis):
-        isoelectric_point = ipc.predict_isoelectric_point_ProMoST(sequence)
+        isoelectric_point = ipc.predict_isoelectric_point_ProMoST(sequence.upper())
         with open(app.root_path + "/static/data/"+user+"/"+analysis+"_isoelectric.out", 'w') as f:
             f.write('%f' % isoelectric_point)
 
