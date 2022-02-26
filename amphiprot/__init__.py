@@ -199,21 +199,25 @@ def create_app(test_config=None):
                         else:
                             flash('UniProt id ' + data['UniProt_id'] + ' does not exist', 'error')
                 elif "query" in raw_data:
-                    alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
-                    for sequence in parsedmulti(raw_data["query"]):
-                        if sequence[0] == None:
-                            flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
-                            return redirect(url_for('index'))
-                        elif alphabets.search(sequence[1]) is not None:
-                            data['protein_name'] = sequence[0]
-                            data['sequence'] = sequence[1]
-                            with open(path + '/' + str(i) + '_input.json', 'w') as fp:
-                                json.dump(data, fp)
-                                fp.close()
-                            i += 1
-                        else:
-                            flash('Invalid format in sequence ' + sequence[0], 'error')
-                            return redirect(url_for('index'))
+                    if raw_data["query"].startswith(">"):
+                        alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
+                        for sequence in parsedmulti(raw_data["query"]):
+                            if sequence[0] == None:
+                                flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                                return redirect(url_for('index'))
+                            elif alphabets.search(sequence[1]) is not None:
+                                data['protein_name'] = sequence[0]
+                                data['sequence'] = sequence[1]
+                                with open(path + '/' + str(i) + '_input.json', 'w') as fp:
+                                    json.dump(data, fp)
+                                    fp.close()
+                                i += 1
+                            else:
+                                flash('Invalid format in sequence ' + sequence[0], 'error')
+                                return redirect(url_for('index'))
+                    else:
+                        flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                        return redirect(url_for('index'))
                 elif "file" in data:
                     del data["file"]
                     alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
@@ -223,19 +227,24 @@ def create_app(test_config=None):
                     raw_data["file"] = ff.read()
                     ff.close()
                     os.remove(app.root_path + '/static/tmp/'+filename)
-                    for sequence in parsedmulti(raw_data["file"]):
-                        if sequence[0] == None:
-                            flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
-                            return redirect(url_for('index'))
-                        if alphabets.search(sequence[1]) is not None:
-                            data['protein_name'] = sequence[0]
-                            data['sequence'] = sequence[1]
-                            with open(path + '/' + str(i) + '_input.json', 'w') as fp:
-                                json.dump(data, fp)
-                                fp.close()
-                            i += 1
-                        else:
-                            flash('Invalid format in sequence ' + sequence[0], 'error')
+                    if raw_data["file"].startswith(">"):
+                        for sequence in parsedmulti(raw_data["file"]):
+                            if sequence[0] == None:
+                                flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                                return redirect(url_for('index'))
+                            elif alphabets.search(sequence[1]) is not None:
+                                data['protein_name'] = sequence[0]
+                                data['sequence'] = sequence[1]
+                                with open(path + '/' + str(i) + '_input.json', 'w') as fp:
+                                    json.dump(data, fp)
+                                    fp.close()
+                                i += 1
+                            else:
+                                flash('Invalid format in sequence ' + sequence[0], 'error')
+                                return redirect(url_for('index'))
+                    else:
+                        flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                        return redirect(url_for('index'))
                 return redirect(url_for('loading', out=data['name']))
             else:
                 new_query = Query( Date = datetime.now(), Error = None)
@@ -300,33 +309,37 @@ def create_app(test_config=None):
                             flash('UniProt id ' + data['UniProt_id'] + ' does not exist', 'error')
                 elif "query" in raw_data:
                     alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
-                    for sequence in parsedmulti(raw_data["query"]):
-                        if sequence[0] == None:
-                            flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
-                            return redirect(url_for('index'))
-                        if alphabets.search(sequence[1]) is not None:
-                            data['protein_name'] = sequence[0]
-                            data['sequence'] = sequence[1]
-                            new_analysis = Analysis(
+                    if raw_data["query"].startswith(">"):
+                        for sequence in parsedmulti(raw_data["query"]):
+                            if sequence[0] == None:
+                                flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                                return redirect(url_for('index'))
+                            elif alphabets.search(sequence[1]) is not None:
+                                data['protein_name'] = sequence[0]
+                                data['sequence'] = sequence[1]
+                                new_analysis = Analysis(
                                 Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
-                            new_analysis.options.append(new_options)
-                            try:
-                                db.session.add(new_analysis)
-                                db.session.commit()
-                            except exc.IntegrityError:
-                                db.session.rollback()
-                            with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                                json.dump(data, fp)
-                                fp.close()
-                            new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
-                                + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
-                            try:
-                                db.session.add(new_file)
-                                db.session.commit()
-                            except exc.IntegrityError:
-                                db.session.rollback()
-                        else:
-                            flash('Invalid format in sequence ' + sequence[0], 'error')
+                                new_analysis.options.append(new_options)
+                                try:
+                                    db.session.add(new_analysis)
+                                    db.session.commit()
+                                except exc.IntegrityError:
+                                    db.session.rollback()
+                                with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+                                    json.dump(data, fp)
+                                    fp.close()
+                                new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"+ str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
+                                try:
+                                    db.session.add(new_file)
+                                    db.session.commit()
+                                except exc.IntegrityError:
+                                    db.session.rollback()
+                            else:
+                                flash('Invalid format in sequence ' + sequence[0], 'error')
+                                return redirect(url_for('index'))
+                    else:
+                        flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                        return redirect(url_for('index'))
                 elif "file" in data:
                     del data["file"]
                     alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
@@ -336,33 +349,37 @@ def create_app(test_config=None):
                     raw_data["file"] = ff.read()
                     ff.close()
                     os.remove(app.root_path + '/static/tmp/'+filename)
-                    for sequence in parsedmulti(raw_data["file"]):
-                        if sequence[0] == None:
-                            flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
-                            return redirect(url_for('index'))
-                        if alphabets.search(sequence[1]) is not None:
-                            data['protein_name'] = sequence[0]
-                            data['sequence'] = sequence[1]
-                            new_analysis = Analysis(
+                    if raw_data["file"].startswith(">"):
+                        for sequence in parsedmulti(raw_data["file"]):
+                            if sequence[0] == None:
+                                flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                                return redirect(url_for('index'))
+                            elif alphabets.search(sequence[1]) is not None:
+                                data['protein_name'] = sequence[0]
+                                data['sequence'] = sequence[1]
+                                new_analysis = Analysis(
                                 Date=datetime.now(), Error=None, user_id=current_user.get_id(), query_id = new_query.id, protein_name = sequence[0])
-                            new_analysis.options.append(new_options)
-                            try:
-                                db.session.add(new_analysis)
-                                db.session.commit()
-                            except exc.IntegrityError:
-                                db.session.rollback()
-                            with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                                json.dump(data, fp)
-                                fp.close()
-                            new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
-                                + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
-                            try:
-                                db.session.add(new_file)
-                                db.session.commit()
-                            except exc.IntegrityError:
-                                db.session.rollback()
-                        else:
-                            flash('Invalid format in sequence' + sequence[0], 'error')
+                                new_analysis.options.append(new_options)
+                                try:
+                                    db.session.add(new_analysis)
+                                    db.session.commit()
+                                except exc.IntegrityError:
+                                    db.session.rollback()
+                                with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
+                                    json.dump(data, fp)
+                                    fp.close()
+                                new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"+ str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
+                                try:
+                                    db.session.add(new_file)
+                                    db.session.commit()
+                                except exc.IntegrityError:
+                                    db.session.rollback()
+                            else:
+                                flash('Invalid format in sequence' + sequence[0], 'error')
+                                return redirect(url_for('index'))
+                    else:
+                        flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                        return redirect(url_for('index'))
                 return redirect(url_for('loading', out=new_query.id))
         return render_template('index.html', form=form)
 
