@@ -301,6 +301,9 @@ def create_app(test_config=None):
                 elif "query" in raw_data:
                     alphabets = re.compile('^[acdefghiklmnpqrstvwxy]*$', re.I)
                     for sequence in parsedmulti(raw_data["query"]):
+                        if sequence[0] == None:
+                            flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                            return redirect(url_for('index'))
                         if alphabets.search(sequence[1]) is not None:
                             data['protein_name'] = sequence[0]
                             data['sequence'] = sequence[1]
@@ -334,6 +337,9 @@ def create_app(test_config=None):
                     ff.close()
                     os.remove(app.root_path + '/static/tmp/'+filename)
                     for sequence in parsedmulti(raw_data["file"]):
+                        if sequence[0] == None:
+                            flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
+                            return redirect(url_for('index'))
                         if alphabets.search(sequence[1]) is not None:
                             data['protein_name'] = sequence[0]
                             data['sequence'] = sequence[1]
