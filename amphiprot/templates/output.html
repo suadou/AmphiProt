@@ -60,28 +60,41 @@ Dashboard
 	<div class="column">
 		<h2>Amphipathic regions plot</h2>
 		<div class="area">
-		<img src="{{ url_for('.static', filename=list[0]) }}">
-		<a href="{{ url_for('.static', filename=list[4]) }}" class="btn btn-lg btn-primary btn-block">Amphipathic regions plot data</a>
-	<div class="rect">
-		<div class="exclusion-x"></div>
-			<div class="exclusion-y"></div>
+			<img src="{{ url_for('.static', filename=list[0]) }}">
+			
+			<div class="rect">
+				<div class="exclusion-x"></div>
+				<div class="exclusion-y"></div>
 			</div>
+		</div>
+		<a href="{{ url_for('.static', filename=list[4]) }}" class="btn btn-lg btn-primary btn-block">Amphipathic regions plot data</a>
 	</div>
-</div>
+	
+	<div class="column" id="viewport" style="width:600px; height:600px;"></div>
+	</div>
+</div>	
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<div class="row">
 	<div class="column">
-	<h2>Hydrophobicity plot</h2>
-	<img src="{{ url_for('.static', filename=list[1]) }}">
-	<a href="{{ url_for('.static', filename=list[5]) }}" class="btn btn-lg btn-primary btn-block">Hydrophobicity plot data</a>
+		<h2>Hydrophobicity plot</h2>
+		<img src="{{ url_for('.static', filename=list[1]) }}">
+		<a href="{{ url_for('.static', filename=list[5]) }}" class="btn btn-lg btn-primary btn-block">Hydrophobicity plot data</a>
 	</div>
 	
 {% block content1 %}
   {% if content %}
-    <div class="column">
-	<h2>Isoelectric point</h2>
-	<pre>{{ content }}</pre>
+	<div class="column">
+		<h2>Isoelectric point</h2>
+		<pre>{{ content }}</pre>
 	</div>
   {% endif %}
 {% endblock %}
+</div>
 
 <script>
   var stage;
@@ -117,10 +130,7 @@ Dashboard
     cartoonRep.update({color:true});
   })
 </script>
-<div class="column">
-<div id="viewport" style="width:600px; height:600px;"></div>
-</div>
-</div>
+
 <footer>
   <p>Amphiprot &copy; 2022 Ciudad A., González S., Suárez S. & Toro E.</p>
   <p>Pompeu Fabra University/University of Barcelona - Barcelona</p>
