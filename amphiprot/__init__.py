@@ -375,7 +375,7 @@ def create_app(test_config=None):
                                 except exc.IntegrityError:
                                     db.session.rollback()
                             else:
-                                flash('Invalid format in sequence' + sequence[0], 'error')
+                                flash('Invalid format in sequence ' + sequence[0], 'error')
                                 return redirect(url_for('index'))
                     else:
                         flash('Invalid format. Remember it is necessary to include a FASTA header.', 'error')
