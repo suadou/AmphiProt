@@ -697,3 +697,10 @@ table.dataTable td {
     margin-top: 0.5em;
   }
 }
+
+.services__text {
+  position: relative;
+  left: 0;
+  top: 0;
+  transform: rotate(+90deg) translate(+125%, -575%);
+}
