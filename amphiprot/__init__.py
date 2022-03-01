@@ -178,7 +178,7 @@ def create_app(test_config=None):
                             data['protein_name'] = sequence[0]
                             data['sequence'] = sequence[1]
                             with open(path + '/' + str(i) + '_input.json', 'w') as fp:
-                                json.dump(data, fp)
+                                json.dump(data, fp, indent = 1)
                                 fp.close()
                             i += 1
                         else:
@@ -193,7 +193,7 @@ def create_app(test_config=None):
                             data['protein_name'] = sequence[0]
                             data['sequence'] = sequence[1]
                             with open(path + '/' + str(i) + '_input.json', 'w') as fp:
-                                json.dump(data, fp)
+                                json.dump(data, fp, indent = 1)
                                 fp.close()
                             i += 1
                         else:
@@ -209,7 +209,7 @@ def create_app(test_config=None):
                                 data['protein_name'] = sequence[0]
                                 data['sequence'] = sequence[1]
                                 with open(path + '/' + str(i) + '_input.json', 'w') as fp:
-                                    json.dump(data, fp)
+                                    json.dump(data, fp, indent = 1)
                                     fp.close()
                                 i += 1
                             else:
@@ -236,7 +236,7 @@ def create_app(test_config=None):
                                 data['protein_name'] = sequence[0]
                                 data['sequence'] = sequence[1]
                                 with open(path + '/' + str(i) + '_input.json', 'w') as fp:
-                                    json.dump(data, fp)
+                                    json.dump(data, fp, indent = 1)
                                     fp.close()
                                 i += 1
                             else:
@@ -270,7 +270,7 @@ def create_app(test_config=None):
                             except exc.IntegrityError:
                                 db.session.rollback()
                             with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                                json.dump(data, fp)
+                                json.dump(data, fp, indent = 1)
                                 fp.close()
                             new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
                                     + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
@@ -296,7 +296,7 @@ def create_app(test_config=None):
                             except exc.IntegrityError:
                                 db.session.rollback()
                             with open(app.root_path +"/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                                json.dump(data, fp)
+                                json.dump(data, fp, indent = 1)
                                 fp.close()
                             new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"
                                     + str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
@@ -326,7 +326,7 @@ def create_app(test_config=None):
                                 except exc.IntegrityError:
                                     db.session.rollback()
                                 with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                                    json.dump(data, fp)
+                                    json.dump(data, fp, indent = 1)
                                     fp.close()
                                 new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"+ str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
                                 try:
@@ -366,7 +366,7 @@ def create_app(test_config=None):
                                 except exc.IntegrityError:
                                     db.session.rollback()
                                 with open(app.root_path + "/static/data/u_"+current_user.username+"/inputs/"+str(new_analysis.id)+"_input.json", 'w') as fp:
-                                    json.dump(data, fp)
+                                    json.dump(data, fp, indent = 1)
                                     fp.close()
                                 new_file = Files(input=True, path="data/u_"+current_user.username+"/inputs/"+ str(new_analysis.id)+"_input.json",  analyss_id=new_analysis.id)
                                 try:
