@@ -60,13 +60,15 @@ Dashboard
 	<div class="column">
 		<h2>Amphipathic regions plot</h2>
 		<div class="area">
+			<div class="services__text">Residue position in the sequence</div>
 			<img src="{{ url_for('.static', filename=list[0]) }}">
-			
+			<p style="text-align:center;">Turns per amino acid</p>
 			<div class="rect">
 				<div class="exclusion-x"></div>
 				<div class="exclusion-y"></div>
 			</div>
 		</div>
+		<br>
 		<a href="{{ url_for('.static', filename=list[4]) }}" class="btn btn-lg btn-primary btn-block">Amphipathic regions plot data</a>
 	</div>
 	
@@ -84,7 +86,10 @@ Dashboard
 <div class="row">	
 	<div class="column">
 		<h2>Hydrophobicity plot</h2>
+		<div class="services__text">Residue position in the sequence</div>
 		<img src="{{ url_for('.static', filename=list[1]) }}">
+		<p style="text-align:center;">Hydrophobicity score</p>
+		<br>
 		<a href="{{ url_for('.static', filename=list[5]) }}" class="btn btn-lg btn-primary btn-block">Hydrophobicity plot data</a>
 	</div>
 
