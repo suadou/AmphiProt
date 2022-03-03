@@ -26,7 +26,7 @@ def create_app(test_config=None):
 
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'PotatoPatato'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1942_wad@127.0.0.1/dbwdatabase'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://amphiprot:SecretKey2022*@192.168.1.0/amphiprot'
     Bootstrap(app)
     db = SQLAlchemy(app)
     login_manager = LoginManager()
