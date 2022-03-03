@@ -60,21 +60,35 @@ antigenic epitopes for the creation of new promising vaccines as well as inhibit
         When using this app, two access options are available:
         <ul class="help">
         	<li class="help"><b>Registered user</b>: By registering on the <a href="{{ url_for('register') }}"><i>Register</i></a> page, you can perform your analysis and have access to the sets of results that you have previously obtained moving to your workspace every time you <a href="{{ url_for('loging') }}"><i>log in</i></a>.</li>
-        	<li class="help"><b>Non-registered user</b>: Registration is not compulsory to use the app. However, once you close the session in your browser, all the data that you have obtained on your query will be lost.</li>
+        	<li class="help"><b>Non-registered user</b>: Registration is not compulsory to use the app. However, once you close the session in your browser, all the data that you have obtained on your query will be lost. In case a multi-FASTA query is introduced, you will be redirected to a workspace containing links to the output pages of each input sequence.</li>
         </ul>
         </p>
         <h2 class="help">How does it work?</h2>
         <p class="help">
         In the <a href="{{ url_for('index') }}"><i>Home</i></a> page you will find a form with various fields:
         <ul class="help">
-        	<li class="help"><b>PDB_id</b>: Here, users can introduce the PDB code (4 uppercase alphanumeric characters) of the protein that they want to analyse.</li>
-        	<li class="help"><b>UniProt_id</b>: Here, users can introduce the UniProt code (between 4 and 16 uppercase alphanumeric characters) of the protein that they want to analyse.</li>
-        	<li class="help"><b>Sequence</b>: Field in which the query amino acid sequence can be wirtten in FASTA format.</li>
-        	<li class="help"><b>File</b>: The user can also upload a file in FASTA format containing the query sequence that they want to analyise.</li>
+        	<li class="help"><b>PDB id</b>: Here, users can introduce the PDB code (4 uppercase alphanumeric characters) of the protein that they want to analyse.</li>
+        	<li class="help"><b>UniProt id</b>: Here, users can introduce the UniProt code (between 4 and 16 uppercase alphanumeric characters) of the protein that they want to analyse.</li>
+        	<li class="help"><b>Sequence</b>: Field in which the query amino acid sequence can be wirtten in FASTA format. Multi-FASTA texts are accepted as input.</li>
+        	<li class="help"><b>File input</b>: The user can also upload a file in FASTA format containing the query sequence that they want to analyise. Multi-FASTA texts are accepted as input.</li>
         	<li class="help"><b>Table</b>: As the analysis performed by this app on amphipathic regions require the use of a normalized hydrophobicity scale, users can choose which table of scores they want to apply to the study of their protein from Chothia, Janin, Tanford, Wimley, Eisenberg, Kyte & Doolittle, von Heijne-Blomberg and Wolfenden.</li>
         	<li class="help"><b>Isoelectric point</b>: Selecting this option, the computation of the isoelectric point of the sequence will also be retrieved to the user.</li>
         </ul>
         </p>
+        <h2 class="help">How to interpret the output</h2>
+        <p class="help">
+        After submitting your query, you will have access to an output page showing two graphs. The first one represents a contour map showing the power spectra of the input sequence, where areas with a yellowish colour correspond to the predicted regular amphipathic structures of the protein: those located at frequency 1/3.6 can be canonically associated to alpha helices, while peaks at 1/2 are predicted to be beta sheets.
+        </p>
+        <p class="help">
+        A 3D interactive representation of the protein or its most similar homolog is also shown. The user can select areas of interest on the amphipathic map that will be highlighted on the visor. 
+        </p>
+        <p class="help">
+        Below, a graphic representation of the hydrophobicity score of each residue on the query sequence can also be consulted.
+        </p>
+        <p class="help">
+        In case the user had selected the <i>isoelectric point</i> option, the corresponding value will be shown as well in a section of this output.
+        </p>
+        
 </div><!--/.nav-collapse -->
 
 
