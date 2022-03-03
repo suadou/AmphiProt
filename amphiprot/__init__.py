@@ -1,6 +1,3 @@
-from distutils.log import error
-from http.client import FORBIDDEN
-from turtle import done
 from flask import Flask, render_template, redirect, url_for, flash, send_from_directory
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
@@ -14,7 +11,6 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import os
 import random
 import json
-from flask_restful import Api, Resource, reqparse
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import re
@@ -29,7 +25,6 @@ def create_app(test_config=None):
     abspath = os.path.abspath(os.getcwd())
 
     app = Flask(__name__)
-    api = Api(app)
     app.config['SECRET_KEY'] = 'PotatoPatato'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1942_wad@127.0.0.1/dbwdatabase'
     Bootstrap(app)
